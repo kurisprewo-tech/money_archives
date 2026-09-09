@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Money Archives</title>
+
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+
+  <style>
+    * {
+      box-sizing: border-box;
+      font-family: Arial, sans-serif;
+    }
+
+    body {
+      margin: 0;
+      padding: 20px;
+      background: #f4f6f8;
+      color: #222;
+    }
+
+    .container {
+      max-width: 500px;
+      margin: auto;
+    }
+
+    h1 {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    .card {
+      background: white;
+      padding: 20px;
+      border-radius: 18px;
+      margin-bottom: 15px;
+      box-shadow: 0 3px 12px rgba(0,0,0,.08);
+    }
+
+    .saldo {
+      font-size: 30px;
+      font-weight: bold;
+      margin-top: 8px;
+    }
+
+    .buttons {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    button {
+      border: 0;
+      padding: 14px;
+      border-radius: 12px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+
+    .masuk {
+      background: #d9f7df;
+    }
+
+    .keluar {
+      background: #ffdede;
+    }
+
+    input {
+      width: 100%;
+      padding: 13px;
+      margin: 7px 0;
+      border: 1px solid #ddd;
+      border-radius: 10px;
+      font-size: 15px;
+    }
+
+    .submit {
+      width: 100%;
+      background: #222;
+      color: white;
+      margin-top: 8px;
+    }
+
+    .item {
+      padding: 12px 0;
+      border-bottom: 1px solid #eee;
+    }
+
+    .green {
+      color: green;
+    }
+
+    .red {
+      color: red;
+    }
+
+    .hidden {
+      display: none;
+    }
+  </style>
+</head>
+
+<body>
+
+<div class="container">
+
+  <h1>🐝 Money Archives</h1>
+
+  <div class="card">
+    <div>Saldo</div>
+    <div class="saldo" id="saldo">Rp0</div>
+  </div>
+
+  <div class="card">
+    <div class="buttons">
+      <button class="masuk" onclick="showForm('masuk')">
+        ➕ Pemasukan
+      </button>
+
+      <button class="keluar" onclick="showForm('keluar')">
+        ➖ Pengeluaran
+      </button>
+    </div>
+  </div>
+
+  <div class="card hidden" id="formCard">
+
+    <h3 id="formTitle">Tambah Transaksi</h3>
+
+    <input
+      type="number"
+      id="jumlah"
+      placeholder="Jumlah (Rp)"
+    >
+
+    <input
+      type="text"
+      id="keterangan"
+      placeholder="Keterangan"
+    >
+
+    <button class="submit" onclick="simpan()">
+      Simpan
+    </button>
+
+  </div>
+
+  <div class="card">
+    <h3>📜 Riwayat</h3>
+    <div id="riwayat">
+      Belum ada transaksi.
+    </div>
+  </div>
+
+</div>
+
+<script>
+
+const tg = window.Telegram.WebApp;
+tg.ready();
+tg.expand();
+
+let saldo = Number(localStorage.getItem("saldo")) || 0;
+let riwayat = JSON.parse(localStorage.getItem("riwayat")) || [];
+
+let tipe = "";
+
+function rupiah(angka) {
+  return new Intl.NumberFormat("id-ID", {
+    style: "currency",
+    currency: "IDR",
+    maximumFractionDigits: 0
+  }).format(angka);
+}
+
+function update() {
+
+  document.getElementById("saldo").innerText =
+    rupiah(saldo);
+
+  const box = document.getElementById("riwayat");
+
+  if (riwayat.length === 0) {
+    box.innerHTML = "Belum ada transaksi.";
+    return;
+  }
+
+  box.innerHTML = "";
+
+  riwayat.slice().reverse().forEach(item => {
+
+    const div = document.createElement("div");
+
+    div.className = "item";
+
+    div.innerHTML = `
+      <b class="${item.tipe === 'masuk' ? 'green' : 'red'}">
+        ${item.tipe === 'masuk' ? '+' : '-'} ${rupiah(item.jumlah)}
+      </b>
+      <br>
+      ${item.keterangan}
+      <br>
+      <small>${item.tanggal}</small>
+    `;
+
+    box.appendChild(div);
+  });
+}
+
+function showForm(jenis) {
+
+  tipe = jenis;
+
+  document.getElementById("formCard")
+    .classList.remove("hidden");
+
+  document.getElementById("formTitle").innerText =
+    jenis === "masuk"
+      ? "➕ Tambah Pemasukan"
+      : "➖ Tambah Pengeluaran";
+
+  document.getElementById("jumlah").focus();
+}
+
+function simpan() {
+
+  const jumlah =
+    Number(document.getElementById("jumlah").value);
+
+  const keterangan =
+    document.getElementById("keterangan").value.trim();
+
+  if (!jumlah || jumlah <= 0) {
+    alert("Masukkan jumlah yang benar.");
+    return;
+  }
+
+  if (!keterangan) {
+    alert("Masukkan keterangan.");
+    return;
+  }
+
+  if (tipe === "masuk") {
+    saldo += jumlah;
+  } else {
+
+    if (jumlah > saldo) {
+      alert("Saldo tidak mencukupi.");
+      return;
+    }
+
+    saldo -= jumlah;
+  }
+
+  riwayat.push({
+    tipe: tipe,
+    jumlah: jumlah,
+    keterangan: keterangan,
+    tanggal: new Date().toLocaleString("id-ID")
+  });
+
+  localStorage.setItem("saldo", saldo);
+  localStorage.setItem("riwayat", JSON.stringify(riwayat));
+
+  document.getElementById("jumlah").value = "";
+  document.getElementById("keterangan").value = "";
+
+  document.getElementById("formCard")
+    .classList.add("hidden");
+
+  update();
+}
+
+update();
+
+</script>
+
+</body>
+</html>
