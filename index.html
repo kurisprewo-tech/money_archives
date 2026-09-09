@@ -5,10 +5,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Money Archives</title>
 
+  <!-- Telegram Web App -->
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
+
+  <!-- Chart.js untuk grafik -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
   <style>
+
     * {
       box-sizing: border-box;
       font-family: Arial, sans-serif;
@@ -46,7 +50,7 @@
     }
 
     .tabungan {
-      font-size: 25px;
+      font-size: 26px;
       font-weight: bold;
       margin-top: 8px;
     }
@@ -58,11 +62,15 @@
     }
 
     button {
-      border: 0;
+      border: none;
       padding: 14px;
       border-radius: 12px;
       font-size: 16px;
       cursor: pointer;
+    }
+
+    button:active {
+      transform: scale(.98);
     }
 
     .masuk {
@@ -122,9 +130,16 @@
       display: none;
     }
 
+    .kosong {
+      color: #777;
+      text-align: center;
+      padding: 10px;
+    }
+
     canvas {
       max-width: 100%;
     }
+
   </style>
 </head>
 
@@ -134,47 +149,93 @@
 
   <h1>🐝 Money Archives</h1>
 
-  <!-- SALDO -->
+
+  <!-- =====================
+       SALDO
+  ====================== -->
+
   <div class="card">
+
     <div>💰 Saldo</div>
-    <div class="saldo" id="saldo">Rp0</div>
+
+    <div
+      class="saldo"
+      id="saldo"
+    >
+      Rp0
+    </div>
+
   </div>
 
-  <!-- TABUNGAN -->
+
+  <!-- =====================
+       TABUNGAN
+  ====================== -->
+
   <div class="card">
+
     <div>🐝 Total Tabungan</div>
-    <div class="tabungan" id="tabungan">Rp0</div>
+
+    <div
+      class="tabungan"
+      id="tabungan"
+    >
+      Rp0
+    </div>
+
   </div>
 
-  <!-- TRANSAKSI SALDO -->
+
+  <!-- =====================
+       TRANSAKSI
+  ====================== -->
+
   <div class="card">
-    <h3>Transaksi</h3>
+
+    <h3>💳 Transaksi</h3>
 
     <div class="buttons">
 
-      <button class="masuk" onclick="showForm('masuk')">
+      <button
+        class="masuk"
+        onclick="showForm('masuk')"
+      >
         ➕ Pemasukan
       </button>
 
-      <button class="keluar" onclick="showForm('keluar')">
+      <button
+        class="keluar"
+        onclick="showForm('keluar')"
+      >
         ➖ Pengeluaran
       </button>
 
     </div>
+
   </div>
 
-  <!-- TRANSAKSI TABUNGAN -->
+
+  <!-- =====================
+       TABUNGAN
+  ====================== -->
+
   <div class="card">
 
     <h3>🐝 Tabungan</h3>
 
     <div class="buttons">
 
-      <button class="simpan-tabungan" onclick="showForm('tabungan_masuk')">
+      <button
+        class="simpan-tabungan"
+        onclick="showForm('tabungan_masuk')"
+      >
         💵 Masuk Tabungan
       </button>
 
-      <button class="ambil-tabungan" onclick="showForm('tabungan_keluar')">
+      <button
+        class="ambil-tabungan"
+        onclick="showForm('tabungan_keluar')"
+      >
         💸 Keluar Tabungan
       </button>
 
@@ -182,15 +243,25 @@
 
   </div>
 
-  <!-- FORM -->
-  <div class="card hidden" id="formCard">
 
-    <h3 id="formTitle">Tambah Transaksi</h3>
+  <!-- =====================
+       FORM
+  ====================== -->
+
+  <div
+    class="card hidden"
+    id="formCard"
+  >
+
+    <h3 id="formTitle">
+      Tambah Transaksi
+    </h3>
 
     <input
       type="number"
       id="jumlah"
       placeholder="Jumlah (Rp)"
+      min="1"
     >
 
     <input
@@ -199,27 +270,44 @@
       placeholder="Keterangan"
     >
 
-    <button class="submit" onclick="simpan()">
+    <button
+      class="submit"
+      onclick="simpan()"
+    >
       Simpan
     </button>
 
   </div>
 
-  <!-- RIWAYAT -->
+
+  <!-- =====================
+       RIWAYAT
+  ====================== -->
+
   <div class="card">
 
     <h3>📜 Riwayat</h3>
 
     <div id="riwayat">
-      Belum ada transaksi.
+
+      <div class="kosong">
+        Belum ada transaksi.
+      </div>
+
     </div>
 
   </div>
 
-  <!-- GRAFIK -->
+
+  <!-- =====================
+       GRAFIK
+  ====================== -->
+
   <div class="card">
 
-    <h3>📊 Grafik Bulanan</h3>
+    <h3 id="judulGrafik">
+      📊 Grafik Bulanan
+    </h3>
 
     <canvas id="grafik"></canvas>
 
@@ -227,278 +315,407 @@
 
 </div>
 
+
 <script>
 
-const tg = window.Telegram.WebApp;
+  /* =========================
+     TELEGRAM
+  ========================= */
 
-tg.ready();
-tg.expand();
+  const tg =
+    window.Telegram.WebApp;
 
-let saldo =
-  Number(localStorage.getItem("saldo")) || 0;
-
-let tabungan =
-  Number(localStorage.getItem("tabungan")) || 0;
-
-let riwayat =
-  JSON.parse(localStorage.getItem("riwayat")) || [];
-
-let tipe = "";
-
-let chart;
+  tg.ready();
+  tg.expand();
 
 
-/* =========================
-   FORMAT RUPIAH
-========================= */
+  /* =========================
+     DATA
+  ========================= */
 
-function rupiah(angka) {
-
-  return new Intl.NumberFormat("id-ID", {
-    style: "currency",
-    currency: "IDR",
-    maximumFractionDigits: 0
-  }).format(angka);
-
-}
-
-
-/* =========================
-   FORM
-========================= */
-
-function showForm(jenis) {
-
-  tipe = jenis;
-
-  document
-    .getElementById("formCard")
-    .classList.remove("hidden");
-
-  let title = "";
-
-  if (jenis === "masuk") {
-    title = "➕ Tambah Pemasukan";
-  }
-
-  if (jenis === "keluar") {
-    title = "➖ Tambah Pengeluaran";
-  }
-
-  if (jenis === "tabungan_masuk") {
-    title = "💵 Masuk Tabungan";
-  }
-
-  if (jenis === "tabungan_keluar") {
-    title = "💸 Keluar Tabungan";
-  }
-
-  document
-    .getElementById("formTitle")
-    .innerText = title;
-
-  document
-    .getElementById("jumlah")
-    .focus();
-
-}
-
-
-/* =========================
-   SIMPAN TRANSAKSI
-========================= */
-
-function simpan() {
-
-  const jumlah =
+  let saldo =
     Number(
-      document.getElementById("jumlah").value
-    );
+      localStorage.getItem("saldo")
+    ) || 0;
 
-  const keterangan =
+
+  let tabungan =
+    Number(
+      localStorage.getItem("tabungan")
+    ) || 0;
+
+
+  let riwayat =
+    JSON.parse(
+      localStorage.getItem("riwayat")
+    ) || [];
+
+
+  let tipe = "";
+
+  let chart = null;
+
+
+  /* =========================
+     RUPIAH
+  ========================= */
+
+  function rupiah(angka) {
+
+    return new Intl.NumberFormat(
+      "id-ID",
+      {
+        style: "currency",
+        currency: "IDR",
+        maximumFractionDigits: 0
+      }
+    ).format(angka);
+
+  }
+
+
+  /* =========================
+     FORM
+  ========================= */
+
+  function showForm(jenis) {
+
+    tipe = jenis;
+
     document
-      .getElementById("keterangan")
-      .value
-      .trim();
+      .getElementById("formCard")
+      .classList.remove("hidden");
 
 
-  if (!jumlah || jumlah <= 0) {
-
-    alert("Masukkan jumlah yang benar.");
-
-    return;
-  }
+    let title = "";
 
 
-  if (!keterangan) {
+    if (jenis === "masuk") {
 
-    alert("Masukkan keterangan.");
+      title =
+        "➕ Tambah Pemasukan";
 
-    return;
-  }
-
-
-  /* PEMASUKAN */
-
-  if (tipe === "masuk") {
-
-    saldo += jumlah;
-
-  }
-
-
-  /* PENGELUARAN */
-
-  else if (tipe === "keluar") {
-
-    if (jumlah > saldo) {
-
-      alert("Saldo tidak mencukupi.");
-
-      return;
     }
 
-    saldo -= jumlah;
+
+    else if (jenis === "keluar") {
+
+      title =
+        "➖ Tambah Pengeluaran";
+
+    }
+
+
+    else if (
+      jenis === "tabungan_masuk"
+    ) {
+
+      title =
+        "💵 Masuk Tabungan";
+
+    }
+
+
+    else if (
+      jenis === "tabungan_keluar"
+    ) {
+
+      title =
+        "💸 Keluar Tabungan";
+
+    }
+
+
+    document
+      .getElementById("formTitle")
+      .innerText = title;
+
+
+    document
+      .getElementById("jumlah")
+      .value = "";
+
+
+    document
+      .getElementById("keterangan")
+      .value = "";
+
+
+    document
+      .getElementById("jumlah")
+      .focus();
 
   }
 
 
-  /* MASUK TABUNGAN */
+  /* =========================
+     SIMPAN
+  ========================= */
 
-  else if (tipe === "tabungan_masuk") {
+  function simpan() {
 
-    if (jumlah > saldo) {
+    const jumlah =
+      Number(
+        document
+          .getElementById("jumlah")
+          .value
+      );
+
+
+    const keterangan =
+      document
+        .getElementById("keterangan")
+        .value
+        .trim();
+
+
+    if (
+      !jumlah ||
+      jumlah <= 0
+    ) {
 
       alert(
-        "Saldo tidak mencukupi untuk menabung."
+        "Masukkan jumlah yang benar."
       );
 
       return;
+
     }
 
-    saldo -= jumlah;
 
-    tabungan += jumlah;
+    if (!keterangan) {
 
-  }
-
-
-  /* KELUAR TABUNGAN */
-
-  else if (tipe === "tabungan_keluar") {
-
-    if (jumlah > tabungan) {
-
-      alert("Tabungan tidak mencukupi.");
+      alert(
+        "Masukkan keterangan."
+      );
 
       return;
+
     }
 
-    tabungan -= jumlah;
 
-    saldo += jumlah;
+    /* =====================
+       PEMASUKAN
+    ====================== */
+
+    if (
+      tipe === "masuk"
+    ) {
+
+      saldo += jumlah;
+
+    }
+
+
+    /* =====================
+       PENGELUARAN
+    ====================== */
+
+    else if (
+      tipe === "keluar"
+    ) {
+
+      if (
+        jumlah > saldo
+      ) {
+
+        alert(
+          "Saldo tidak mencukupi."
+        );
+
+        return;
+
+      }
+
+      saldo -= jumlah;
+
+    }
+
+
+    /* =====================
+       TABUNGAN MASUK
+    ====================== */
+
+    else if (
+      tipe === "tabungan_masuk"
+    ) {
+
+      if (
+        jumlah > saldo
+      ) {
+
+        alert(
+          "Saldo tidak mencukupi untuk menabung."
+        );
+
+        return;
+
+      }
+
+      saldo -= jumlah;
+
+      tabungan += jumlah;
+
+    }
+
+
+    /* =====================
+       TABUNGAN KELUAR
+    ====================== */
+
+    else if (
+      tipe === "tabungan_keluar"
+    ) {
+
+      if (
+        jumlah > tabungan
+      ) {
+
+        alert(
+          "Tabungan tidak mencukupi."
+        );
+
+        return;
+
+      }
+
+      tabungan -= jumlah;
+
+      saldo += jumlah;
+
+    }
+
+
+    /* =====================
+       TANGGAL
+    ====================== */
+
+    const sekarang =
+      new Date();
+
+
+    const tanggal =
+      sekarang.toLocaleString(
+        "id-ID"
+      );
+
+
+    /* =====================
+       RIWAYAT
+    ====================== */
+
+    riwayat.push({
+
+      tipe: tipe,
+
+      jumlah: jumlah,
+
+      keterangan: keterangan,
+
+      tanggal: tanggal
+
+    });
+
+
+    /* =====================
+       LOCAL STORAGE
+    ====================== */
+
+    localStorage.setItem(
+      "saldo",
+      saldo
+    );
+
+
+    localStorage.setItem(
+      "tabungan",
+      tabungan
+    );
+
+
+    localStorage.setItem(
+      "riwayat",
+      JSON.stringify(
+        riwayat
+      )
+    );
+
+
+    /* =====================
+       RESET
+    ====================== */
+
+    document
+      .getElementById("jumlah")
+      .value = "";
+
+
+    document
+      .getElementById("keterangan")
+      .value = "";
+
+
+    document
+      .getElementById("formCard")
+      .classList.add("hidden");
+
+
+    update();
 
   }
 
 
-  /* TANGGAL */
+  /* =========================
+     UPDATE
+  ========================= */
 
-  const sekarang = new Date();
+  function update() {
 
-  const tanggal =
-    sekarang.toLocaleString("id-ID");
-
-
-  /* SIMPAN RIWAYAT */
-
-  riwayat.push({
-
-    tipe: tipe,
-
-    jumlah: jumlah,
-
-    keterangan: keterangan,
-
-    tanggal: tanggal,
-
-    bulan:
-      sekarang.getFullYear() +
-      "-" +
-      String(
-        sekarang.getMonth() + 1
-      ).padStart(2, "0")
-
-  });
+    document
+      .getElementById("saldo")
+      .innerText =
+      rupiah(saldo);
 
 
-  /* SIMPAN DATA */
-
-  localStorage.setItem(
-    "saldo",
-    saldo
-  );
-
-  localStorage.setItem(
-    "tabungan",
-    tabungan
-  );
-
-  localStorage.setItem(
-    "riwayat",
-    JSON.stringify(riwayat)
-  );
+    document
+      .getElementById("tabungan")
+      .innerText =
+      rupiah(tabungan);
 
 
-  /* RESET FORM */
+    tampilkanRiwayat();
 
-  document
-    .getElementById("jumlah")
-    .value = "";
-
-  document
-    .getElementById("keterangan")
-    .value = "";
-
-  document
-    .getElementById("formCard")
-    .classList.add("hidden");
-
-
-  update();
-
-}
-
-
-/* =========================
-   UPDATE TAMPILAN
-========================= */
-
-function update() {
-
-  document
-    .getElementById("saldo")
-    .innerText =
-    rupiah(saldo);
-
-
-  document
-    .getElementById("tabungan")
-    .innerText =
-    rupiah(tabungan);
-
-
-  const box =
-    document.getElementById("riwayat");
-
-
-  if (riwayat.length === 0) {
-
-    box.innerHTML =
-      "Belum ada transaksi.";
+    buatGrafik();
 
   }
 
-  else {
+
+  /* =========================
+     RIWAYAT
+  ========================= */
+
+  function tampilkanRiwayat() {
+
+    const box =
+      document.getElementById(
+        "riwayat"
+      );
+
+
+    if (
+      riwayat.length === 0
+    ) {
+
+      box.innerHTML = `
+        <div class="kosong">
+          Belum ada transaksi.
+        </div>
+      `;
+
+      return;
+
+    }
+
 
     box.innerHTML = "";
 
@@ -506,151 +723,136 @@ function update() {
     riwayat
       .slice()
       .reverse()
-      .forEach(item => {
+      .forEach(
+        function(item) {
 
-        const div =
-          document.createElement("div");
-
-
-        div.className = "item";
-
-
-        let tanda = "";
-
-        let kelas = "";
-
-        let nama = "";
+          const div =
+            document.createElement(
+              "div"
+            );
 
 
-        if (item.tipe === "masuk") {
+          div.className =
+            "item";
 
-          tanda = "+";
-          kelas = "green";
-          nama = "Pemasukan";
+
+          let tanda = "";
+
+          let kelas = "";
+
+          let nama = "";
+
+
+          if (
+            item.tipe === "masuk"
+          ) {
+
+            tanda = "+";
+
+            kelas = "green";
+
+            nama =
+              "Pemasukan";
+
+          }
+
+
+          else if (
+            item.tipe === "keluar"
+          ) {
+
+            tanda = "-";
+
+            kelas = "red";
+
+            nama =
+              "Pengeluaran";
+
+          }
+
+
+          else if (
+            item.tipe ===
+            "tabungan_masuk"
+          ) {
+
+            tanda = "🐝 +";
+
+            kelas = "yellow";
+
+            nama =
+              "Masuk Tabungan";
+
+          }
+
+
+          else if (
+            item.tipe ===
+            "tabungan_keluar"
+          ) {
+
+            tanda = "🐝 -";
+
+            kelas = "purple";
+
+            nama =
+              "Keluar Tabungan";
+
+          }
+
+
+          div.innerHTML = `
+
+            <b class="${kelas}">
+              ${tanda}
+              ${rupiah(item.jumlah)}
+            </b>
+
+            <br>
+
+            <b>
+              ${nama}
+            </b>
+
+            <br>
+
+            ${item.keterangan}
+
+            <br>
+
+            <small>
+              📅 ${item.tanggal}
+            </small>
+
+          `;
+
+
+          box.appendChild(
+            div
+          );
 
         }
-
-        else if (item.tipe === "keluar") {
-
-          tanda = "-";
-          kelas = "red";
-          nama = "Pengeluaran";
-
-        }
-
-        else if (
-          item.tipe === "tabungan_masuk"
-        ) {
-
-          tanda = "🐝 +";
-          kelas = "yellow";
-          nama = "Masuk Tabungan";
-
-        }
-
-        else if (
-          item.tipe === "tabungan_keluar"
-        ) {
-
-          tanda = "🐝 -";
-          kelas = "purple";
-          nama = "Keluar Tabungan";
-
-        }
-
-
-        div.innerHTML = `
-
-          <b class="${kelas}">
-            ${tanda} ${rupiah(item.jumlah)}
-          </b>
-
-          <br>
-
-          <b>${nama}</b>
-
-          <br>
-
-          ${item.keterangan}
-
-          <br>
-
-          <small>
-            📅 ${item.tanggal}
-          </small>
-
-        `;
-
-
-        box.appendChild(div);
-
-      });
+      );
 
   }
 
 
-  buatGrafik();
+  /* =========================
+     GRAFIK 1 BULAN
+  ========================= */
 
-}
+  function buatGrafik() {
 
-
-/* =========================
-   GRAFIK BULANAN
-========================= */
-
-function buatGrafik() {
-
-  const sekarang =
-    new Date();
-
-  const tahun =
-    sekarang.getFullYear();
+    const sekarang =
+      new Date();
 
 
-  const bulanSekarang =
-    sekarang.getMonth();
+    const tahun =
+      sekarang.getFullYear();
 
 
-  const labels = [];
-
-  const pemasukan = [];
-
-  const pengeluaran = [];
-
-
-  for (
-    let i = 5;
-    i >= 0;
-    i--
-  ) {
-
-    const date =
-      new Date(
-        tahun,
-        bulanSekarang - i,
-        1
-      );
-
-
-    const tahunData =
-      date.getFullYear();
-
-    const bulanData =
-      date.getMonth();
-
-
-    const namaBulan =
-      date.toLocaleString(
-        "id-ID",
-        {
-          month: "short"
-        }
-      );
-
-
-    labels.push(
-      namaBulan
-    );
+    const bulan =
+      sekarang.getMonth();
 
 
     let totalMasuk = 0;
@@ -658,145 +860,65 @@ function buatGrafik() {
     let totalKeluar = 0;
 
 
-    riwayat.forEach(item => {
+    /* HITUNG BULAN SEKARANG */
 
-      const itemDate =
-        new Date(
+    riwayat.forEach(
+      function(item) {
+
+        const bagian =
           item.tanggal
-        );
-
-
-      if (
-        itemDate.getFullYear()
-        === tahunData
-        &&
-        itemDate.getMonth()
-        === bulanData
-      ) {
-
-        if (
-          item.tipe === "masuk"
-        ) {
-
-          totalMasuk +=
-            item.jumlah;
-
-        }
+            .split(",")[0]
+            .split("/");
 
 
         if (
-          item.tipe === "keluar"
+          bagian.length !== 3
         ) {
-
-          totalKeluar +=
-            item.jumlah;
-
+          return;
         }
 
-      }
 
-    });
-
-
-    pemasukan.push(
-      totalMasuk
-    );
-
-    pengeluaran.push(
-      totalKeluar
-    );
-
-  }
+        const tanggalItem =
+          Number(
+            bagian[0]
+          );
 
 
-  const ctx =
-    document
-      .getElementById("grafik")
-      .getContext("2d");
+        const bulanItem =
+          Number(
+            bagian[1]
+          ) - 1;
 
 
-  if (chart) {
+        const tahunItem =
+          Number(
+            bagian[2]
+          );
 
-    chart.destroy();
 
-  }
+        if (
+          tahunItem === tahun &&
+          bulanItem === bulan
+        ) {
+
+          if (
+            item.tipe ===
+            "masuk"
+          ) {
+
+            totalMasuk +=
+              item.jumlah;
+
+          }
 
 
-  chart =
-    new Chart(
-      ctx,
-      {
+          if (
+            item.tipe ===
+            "keluar"
+          ) {
 
-        type: "bar",
-
-        data: {
-
-          labels: labels,
-
-          datasets: [
-
-            {
-
-              label:
-                "Pemasukan",
-
-              data:
-                pemasukan
-
-            },
-
-            {
-
-              label:
-                "Pengeluaran",
-
-              data:
-                pengeluaran
-
-            }
-
-          ]
-
-        },
-
-        options: {
-
-          responsive: true,
-
-          plugins: {
-
-            legend: {
-
-              position:
-                "bottom"
-
-            }
-
-          },
-
-          scales: {
-
-            y: {
-
-              beginAtZero:
-                true,
-
-              ticks: {
-
-                callback:
-                  function(value) {
-
-                    return "Rp" +
-                      Number(value)
-                        .toLocaleString(
-                          "id-ID"
-                        );
-
-                  }
-
-              }
-
-            }
+            totalKeluar +=
+              item.jumlah;
 
           }
 
@@ -805,14 +927,146 @@ function buatGrafik() {
       }
     );
 
-}
+
+    /* NAMA BULAN */
+
+    const namaBulan =
+      sekarang.toLocaleString(
+        "id-ID",
+        {
+          month: "long",
+          year: "numeric"
+        }
+      );
 
 
-/* =========================
-   MULAI
-========================= */
+    document
+      .getElementById(
+        "judulGrafik"
+      )
+      .innerText =
+      "📊 Grafik " +
+      namaBulan;
 
-update();
+
+    /* HAPUS GRAFIK LAMA */
+
+    if (chart) {
+
+      chart.destroy();
+
+    }
+
+
+    /* BUAT GRAFIK */
+
+    const canvas =
+      document.getElementById(
+        "grafik"
+      );
+
+
+    chart =
+      new Chart(
+        canvas.getContext("2d"),
+        {
+
+          type: "bar",
+
+          data: {
+
+            labels: [
+              "Pemasukan",
+              "Pengeluaran"
+            ],
+
+            datasets: [
+
+              {
+
+                label:
+                  namaBulan,
+
+                data: [
+                  totalMasuk,
+                  totalKeluar
+                ]
+
+              }
+
+            ]
+
+          },
+
+          options: {
+
+            responsive: true,
+
+            plugins: {
+
+              legend: {
+
+                display: true
+
+              },
+
+              tooltip: {
+
+                callbacks: {
+
+                  label:
+                    function(context) {
+
+                      return rupiah(
+                        context.raw
+                      );
+
+                    }
+
+                }
+
+              }
+
+            },
+
+            scales: {
+
+              y: {
+
+                beginAtZero: true,
+
+                ticks: {
+
+                  callback:
+                    function(value) {
+
+                      return "Rp" +
+                        Number(value)
+                          .toLocaleString(
+                            "id-ID"
+                          );
+
+                    }
+
+                }
+
+              }
+
+            }
+
+          }
+
+        }
+      );
+
+  }
+
+
+  /* =========================
+     JALANKAN
+  ========================= */
+
+  update();
 
 </script>
 
