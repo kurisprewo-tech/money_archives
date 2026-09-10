@@ -104,6 +104,17 @@ input:focus,select:focus{border-color:var(--pink)}
   <div class="loader"><div class="bee">🐝</div><b>Money Archives</b><div class="muted">Menyiapkan aplikasi...</div></div>
 </div>
 
+<script>
+// Failsafe: jangan biarkan layar loading menggantung.
+setTimeout(function(){
+  var loading=document.getElementById("loading");
+  var auth=document.getElementById("authScreen");
+  var app=document.getElementById("app");
+  if(loading) loading.classList.add("hidden");
+  if(auth && app && app.classList.contains("hidden")) auth.classList.remove("hidden");
+}, 3500);
+</script>
+
 <div id="authScreen" class="auth hidden">
   <div class="auth-card">
     <div class="auth-logo">🐝</div>
@@ -375,11 +386,4 @@ async function ubahTarget(){
   if(input===null)return;
   const n=parseNominal(input);
   if(!Number.isFinite(n)||n<=0){toast("❌ Target tidak valid");return}
-  const old=data.target;data.target=n;
-  try{await simpanPengaturan();updateTampilan();toast("🎯 Target disimpan: "+rupiah(n))}
-  catch(e){data.target=old;toast("❌ Target gagal disimpan")}
-}
-function isiTahun(){
-  const sel=document.getElementById("filterTahun"),old=sel.value;
-  const tahun=[...new Set(data.riwayat.map(t=>new Date(t.timestamp).getFullYear()))].sort((a,b)=>b-a);
-  sel.inn
+  cons
