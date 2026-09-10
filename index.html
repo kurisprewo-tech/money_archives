@@ -386,4 +386,234 @@ async function ubahTarget(){
   if(input===null)return;
   const n=parseNominal(input);
   if(!Number.isFinite(n)||n<=0){toast("❌ Target tidak valid");return}
-  cons
+  const old=data.target;data.target=n;
+  try{await simpanPengaturan();updateTampilan();toast("🎯 Target disimpan: "+rupiah(n))}
+  catch(e){data.target=old;toast("❌ Target gagal disimpan")}
+}
+function isiTahun(){
+  const sel=document.getElementById("filterTahun"),old=sel.value;
+  const tahun=[...new Set(data.riwayat.map(t=>new Date(t.timestamp).getFullYear()))].sort((a,b)=>b-a);
+  sel.innerHTML='<option value="all">Semua tahun</option>'+tahun.map(y=>`<option value="${y}">${y}</option>`).join("");
+  if(tahun.map(String).includes(old))sel.value=old
+}
+function renderHistory(){
+  const el=document.getElementById("history");if(!el)return;
+  const bulan=document.getElementById("filterBulan").value,tahun=document.getElementById("filterTahun").value,q=document.getElementById("search").value.trim().toLowerCase();
+  let arr=data.riwayat.filter(t=>{
+    const d=new Date(t.timestamp);
+    return (bulan==="all"||d.getMonth()===Number(bulan))&&(tahun==="all"||d.getFullYear()===Number(tahun))&&(!q||String(t.keterangan).toLowerCase().includes(q)||String(t.jenis).toLowerCase().includes(q))
+  });
+  if(!arr.length){el.innerHTML='<div class="empty">Belum ada riwayat yang cocok.</div>';return}
+  arr.sort((a,b)=>new Date(b.timestamp)-new Date(a.timestamp));
+  let html="",last="";
+  arr.forEach(t=>{
+    const d=new Date(t.timestamp),key=d.getFullYear()+"-"+d.getMonth();
+    if(key!==last){html+=`<div class="month-title">${namaBulan[d.getMonth()]} ${d.getFullYear()}</div>`;last=key}
+    const plus=["masuk","tabungan_keluar"].includes(t.jenis);
+    const label={masuk:"Pemasukan",keluar:"Pengeluaran",tabungan_masuk:"Tabungan Masuk",tabungan_keluar:"Tabungan Keluar"}[t.jenis]||t.jenis;
+    const tanggal=d.toLocaleDateString("id-ID",{day:"2-digit",month:"long",year:"numeric"});
+    const jam=d.toLocaleTimeString("id-ID",{hour:"2-digit",minute:"2-digit"});
+    html+=`<div class="history-item"><div class="history-top"><span>${escapeHTML(label)}</span><span class="${plus?"plus":"minus"}">${plus?"+":"-"}${rupiah(t.jumlah)}</span></div><div>${escapeHTML(t.keterangan)}</div><div class="muted">📅 ${tanggal} • ${jam} WIB</div><div class="muted">Saldo: ${rupiah(t.saldoSetelah)} • Tabungan: ${rupiah(t.tabunganSetelah)}</div></div>`
+  });
+  el.innerHTML=html
+}
+function loadChartJS(){
+  if(window.Chart){chartReady=true;document.getElementById("chartStatus").textContent="";buatGrafik();return}
+  const s=document.createElement("script");s.src="https://cdn.jsdelivr.net/npm/chart.js";
+  s.onload=()=>{chartReady=true;document.getElementById("chartStatus").textContent="";buatGrafik()};
+  s.onerror=()=>document.getElementById("chartStatus").textContent="Grafik membutuhkan koneksi internet.";
+  document.head.appendChild(s)
+}
+function buatGrafik(){
+  if(!window.Chart)return;
+  const canvas=document.getElementById("chart");if(!canvas)return;
+  let saldoAwal=data.saldo;
+  data.riwayat.slice().sort((a,b)=>new Date(a.timestamp)-new Date(b.timestamp)).forEach(t=>{
+    if(t.jenis==="masuk")saldoAwal-=t.jumlah;
+    if(t.jenis==="keluar")saldoAwal+=t.jumlah;
+    if(t.jenis==="tabungan_masuk")saldoAwal+=t.jumlah;
+    if(t.jenis==="tabungan_keluar")saldoAwal-=t.jumlah;
+  });
+  let saldo=saldoAwal,labels=["Awal"],values=[saldo];
+  data.riwayat.slice().sort((a,b)=>new Date(a.timestamp)-new Date(b.timestamp)).forEach((t,i)=>{
+    if(t.jenis==="masuk")saldo+=t.jumlah;
+    if(t.jenis==="keluar")saldo-=t.jumlah;
+    if(t.jenis==="tabungan_masuk")saldo-=t.jumlah;
+    if(t.jenis==="tabungan_keluar")saldo+=t.jumlah;
+    labels.push("#"+(i+1));values.push(saldo)
+  });
+  if(chart)chart.destroy();
+  chart=new Chart(canvas,{type:"line",data:{labels,datasets:[{label:"Saldo",data:values,tension:.3,fill:false,borderWidth:2,pointRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:true}},scales:{y:{ticks:{callback:v=>rupiah(v)}}}}})
+}
+async function loadCloud(){
+  if(!supabaseClient || !currentUser)throw new Error("Supabase belum siap");
+  const {data:settings,error:e1}=await supabaseClient.from("pengaturan").select("*").eq("user_id",currentUser.id).maybeSingle();
+  if(e1)throw e1;
+  const {data:txs,error:e2}=await supabaseClient.from("transaksi").select("*").eq("user_id",currentUser.id).order("timestamp",{ascending:true});
+  if(e2)throw e2;
+  data={saldo:Number(settings?.saldo)||0,tabungan:Number(settings?.tabungan)||0,target:Number(settings?.target)||0,riwayat:(txs||[]).map(t=>({
+    id:t.id,jenis:t.jenis,jumlah:Number(t.jumlah)||0,keterangan:t.keterangan||"Tanpa keterangan",
+    timestamp:t.timestamp,saldoSetelah:Number(t.saldo_setelah)||0,tabunganSetelah:Number(t.tabungan_setelah)||0
+  }))};
+  if(!settings)await simpanPengaturan();
+  updateTampilan();
+  document.getElementById("cloudStatus").textContent="☁️ Tersambung • data tersimpan di cloud";
+}
+async function maybeImportLocal(){
+  const raw=localStorage.getItem("money_archives_v4");if(!raw||data.riwayat.length)return;
+  try{
+    const old=JSON.parse(raw);
+    if(!old||!Array.isArray(old.riwayat)||!old.riwayat.length)return;
+    if(!confirm("Ditemukan riwayat lama di perangkat ini. Impor ke Supabase sekarang?"))return;
+    for(const t of old.riwayat){
+      await supabaseClient.from("transaksi").insert({
+        user_id:currentUser.id,jenis:t.jenis,jumlah:Number(t.jumlah)||0,keterangan:t.keterangan||"Tanpa keterangan",
+        timestamp:t.timestamp||new Date().toISOString(),saldo_setelah:Number(t.saldoSetelah)||0,tabungan_setelah:Number(t.tabunganSetelah)||0
+      });
+    }
+    await supabaseClient.from("pengaturan").upsert({
+      user_id:currentUser.id,saldo:Number(old.saldo)||0,tabungan:Number(old.tabungan)||0,target:Number(old.target)||0,updated_at:new Date().toISOString()
+    });
+    await loadCloud();toast("✅ Riwayat lama berhasil diimpor")
+  }catch(e){toast("❌ Impor riwayat gagal")}
+}
+async function pastikanSupabase(){
+  if(supabaseClient) return true;
+  setAuthMsg("⏳ Koneksi cloud sedang disiapkan...",true);
+  try{
+    if(!window.supabase){
+      try{await loadExternalScript("https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2",5000)}
+      catch(e){await loadExternalScript("https://unpkg.com/@supabase/supabase-js@2",5000)}
+    }
+    if(!window.supabase || typeof window.supabase.createClient!=="function") throw new Error("Library Supabase tidak tersedia");
+    supabaseClient=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+    return true;
+  }catch(e){
+    console.error(e);
+    setAuthMsg("❌ Koneksi Supabase gagal. Coba refresh halaman.");
+    return false;
+  }
+}
+async function login(){
+  try{
+    const email=document.getElementById("email").value.trim(),password=document.getElementById("password").value;
+    if(!email||!password){setAuthMsg("Isi email dan password.");return}
+    if(!(await pastikanSupabase())) return;
+    setAuthMsg("⏳ Memproses login...",true);
+    const {data:r,error}=await supabaseClient.auth.signInWithPassword({email,password});
+    if(error){
+      console.error(error);
+      const msg=(error.message||"").toLowerCase();
+      if(msg.includes("email not confirmed")) setAuthMsg("❌ Email belum dikonfirmasi. Cek email konfirmasi dari Supabase.");
+      else if(msg.includes("invalid login credentials")) setAuthMsg("❌ Email atau password salah.");
+      else setAuthMsg("❌ Login gagal: "+(error.message||"kesalahan tidak diketahui"));
+      return;
+    }
+    setAuthMsg("✅ Login berhasil. Membuka aplikasi...",true);
+    if(r && r.user) await startUser(r.user);
+  }catch(e){
+    console.error(e);
+    setAuthMsg("❌ Error login: "+(e.message||e));
+  }
+}
+async function daftar(){
+  try{
+    const email=document.getElementById("email").value.trim(),password=document.getElementById("password").value;
+    if(!email||password.length<6){setAuthMsg("Email wajib diisi dan password minimal 6 karakter.");return}
+    if(!(await pastikanSupabase())) return;
+    setAuthMsg("⏳ Membuat akun...",true);
+    const {data:r,error}=await supabaseClient.auth.signUp({email,password});
+    if(error){console.error(error);setAuthMsg("❌ Pendaftaran gagal: "+(error.message||"kesalahan tidak diketahui"));return}
+    if(!r.session)setAuthMsg("✅ Akun dibuat. Cek email untuk konfirmasi, lalu masuk.",true);
+    else {setAuthMsg("✅ Akun berhasil dibuat.",true);if(r.user) await startUser(r.user)}
+  }catch(e){
+    console.error(e);
+    setAuthMsg("❌ Error pendaftaran: "+(e.message||e));
+  }
+}
+async function logout(){
+  await supabaseClient.auth.signOut();data={saldo:0,tabungan:0,target:0,riwayat:[]};showAuth();toast("Anda sudah keluar")
+}
+async function startUser(user){
+  currentUser=user;
+  const nama=(user.email||"Pengguna").split("@")[0];
+  document.getElementById("greeting").textContent=waktuSapaan();
+  document.getElementById("username").textContent=nama;
+  showApp();
+  try{await loadCloud();await maybeImportLocal()}catch(e){
+    document.getElementById("cloudStatus").textContent="⚠️ Gagal memuat cloud";
+    toast("❌ Gagal memuat data Supabase")
+  }
+}
+function loadExternalScript(src, timeoutMs=8000){
+  return new Promise((resolve,reject)=>{
+    if(src.includes("supabase") && window.supabase) return resolve();
+    const script=document.createElement("script");
+    let finished=false;
+    const done=(err)=>{
+      if(finished)return;
+      finished=true;
+      clearTimeout(timer);
+      script.onload=null;script.onerror=null;
+      err?reject(err):resolve();
+    };
+    const timer=setTimeout(()=>done(new Error("Timeout memuat koneksi internet")),timeoutMs);
+    script.src=src;
+    script.async=true;
+    script.onload=()=>done();
+    script.onerror=()=>done(new Error("Gagal memuat library"));
+    document.head.appendChild(script);
+  });
+}
+
+async function mulai(){
+  showLoading(true);
+
+  // Jangan biarkan loading menggantung jika library/Internet bermasalah.
+  if(SUPABASE_URL.includes("PASTE_")||SUPABASE_KEY.includes("PASTE_")){
+    showAuth();
+    setAuthMsg("Isi SUPABASE_URL dan SUPABASE_KEY di file ini dulu.");
+    return;
+  }
+
+  try{
+    try{
+      await loadExternalScript("https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2",6000);
+    }catch(firstErr){
+      await loadExternalScript("https://unpkg.com/@supabase/supabase-js@2",6000);
+    }
+
+    if(!window.supabase || typeof window.supabase.createClient!=="function"){
+      throw new Error("Library Supabase tidak tersedia.");
+    }
+
+    supabaseClient=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+
+    const {data:{session},error}=await supabaseClient.auth.getSession();
+    if(error)throw error;
+
+    supabaseClient.auth.onAuthStateChange((event,newSession)=>{
+      // INITIAL_SESSION ditangani oleh getSession() di bawah.
+      if(event==="SIGNED_IN" && newSession) startUser(newSession.user);
+      if(event==="SIGNED_OUT"){currentUser=null;showAuth();}
+    });
+
+    if(session) await startUser(session.user);
+    else showAuth();
+  }catch(e){
+    console.error(e);
+    showAuth();
+    setAuthMsg("⚠️ Supabase gagal dimuat. Periksa internet, Project URL, dan Publishable Key.");
+  }
+}
+
+document.addEventListener("DOMContentLoaded",()=>{
+  // Grafik dimuat terpisah. Kalau Chart.js gagal, aplikasi tetap bisa dipakai.
+  loadChartJS();
+  mulai();
+});
+</script>
+</body>
+</html>
+</body>
+</html>
