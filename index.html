@@ -5,7 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="theme-color" content="#f5004f">
 <title>Money Archives</title>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 *{box-sizing:border-box}
 :root{
@@ -238,7 +237,7 @@ const SUPABASE_URL = "https://bqjzwwdhscgwmecuaveo.supabase.co";
 const SUPABASE_KEY = "sb_publishable_HDrPq5sqxx8Pwk8j2p3kuw_U7j4fz3s";
 
 /* Jangan masukkan service_role/secret key di sini. */
-const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+let supabaseClient = null;
 
 let data={saldo:0,tabungan:0,target:0,riwayat:[]};
 let chart=null,chartReady=false,currentUser=null;
@@ -313,7 +312,7 @@ function tambahRiwayat(jenis,jumlah,ket){
   return {jenis,jumlah,keterangan:ket||"Tanpa keterangan",timestamp:new Date().toISOString(),saldoSetelah:data.saldo,tabunganSetelah:data.tabungan}
 }
 async function simpanCloud(tx){
-  if(!currentUser)throw new Error("Belum login");
+  if(!supabaseClient || !currentUser)throw new Error("Belum login / Supabase belum siap");
   const {error:e1}=await supabaseClient.from("transaksi").insert({
     user_id:currentUser.id,jenis:tx.jenis,jumlah:tx.jumlah,keterangan:tx.keterangan,
     timestamp:tx.timestamp,saldo_setelah:tx.saldoSetelah,tabungan_setelah:tx.tabunganSetelah
@@ -325,6 +324,7 @@ async function simpanCloud(tx){
   if(e2)throw e2
 }
 async function simpanPengaturan(){
+  if(!supabaseClient || !currentUser)throw new Error("Supabase belum siap");
   const {error}=await supabaseClient.from("pengaturan").upsert({
     user_id:currentUser.id,saldo:data.saldo,tabungan:data.tabungan,target:data.target,updated_at:new Date().toISOString()
   });
@@ -382,4 +382,4 @@ async function ubahTarget(){
 function isiTahun(){
   const sel=document.getElementById("filterTahun"),old=sel.value;
   const tahun=[...new Set(data.riwayat.map(t=>new Date(t.timestamp).getFullYear()))].sort((a,b)=>b-a);
-  sel.innerHTML='<option val
+  sel.innerHTML='<option value="all">Semu
