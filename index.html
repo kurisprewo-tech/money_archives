@@ -15,7 +15,6 @@
 <!-- Chart.js -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-
 <style>
 
 /* =========================
@@ -41,7 +40,7 @@ body {
 
 
 /* =========================
-   LOADING SCREEN
+   LOADING
 ========================= */
 
 #loadingScreen {
@@ -52,12 +51,13 @@ body {
   align-items: center;
   justify-content: center;
   z-index: 9999;
-  transition: opacity .5s ease, visibility .5s ease;
+  transition: opacity .25s ease, visibility .25s ease;
 }
 
 #loadingScreen.hide {
   opacity: 0;
   visibility: hidden;
+  pointer-events: none;
 }
 
 .loadingBox {
@@ -75,7 +75,7 @@ body {
   margin: auto;
   font-size: 48px;
   box-shadow: 0 8px 25px rgba(0,0,0,.15);
-  animation: floating 1.5s infinite ease-in-out;
+  animation: floating 1.3s infinite ease-in-out;
 }
 
 .loadingTitle {
@@ -91,13 +91,13 @@ body {
 }
 
 .loader {
-  width: 35px;
-  height: 35px;
+  width: 32px;
+  height: 32px;
   border: 4px solid #ddd;
   border-top-color: #222;
   border-radius: 50%;
-  margin: 20px auto 0;
-  animation: spin .8s linear infinite;
+  margin: 18px auto 0;
+  animation: spin .7s linear infinite;
 }
 
 @keyframes spin {
@@ -112,7 +112,7 @@ body {
   }
 
   50% {
-    transform: translateY(-8px);
+    transform: translateY(-7px);
   }
 }
 
@@ -136,7 +136,7 @@ body {
   font-weight: bold;
   z-index: 10000;
   opacity: 0;
-  transition: .35s ease;
+  transition: .3s ease;
 }
 
 #notification.show {
@@ -236,6 +236,13 @@ button:active {
   background: #e4d7ff;
 }
 
+.submit {
+  width: 100%;
+  background: #222;
+  color: white;
+  margin-top: 8px;
+}
+
 
 /* =========================
    INPUT
@@ -248,13 +255,11 @@ input {
   border: 1px solid #ddd;
   border-radius: 10px;
   font-size: 15px;
+  outline: none;
 }
 
-.submit {
-  width: 100%;
-  background: #222;
-  color: white;
-  margin-top: 8px;
+input:focus {
+  border-color: #222;
 }
 
 
@@ -263,8 +268,9 @@ input {
 ========================= */
 
 .item {
-  padding: 12px 0;
+  padding: 13px 0;
   border-bottom: 1px solid #eee;
+  position: relative;
 }
 
 .item:last-child {
@@ -299,6 +305,24 @@ input {
 
 
 /* =========================
+   TOMBOL HAPUS
+========================= */
+
+.deleteBtn {
+  background: #ffe5e5;
+  color: #d60000;
+  padding: 8px 11px;
+  font-size: 13px;
+  border-radius: 9px;
+  margin-top: 8px;
+}
+
+.deleteBtn:active {
+  transform: scale(.96);
+}
+
+
+/* =========================
    GRAFIK
 ========================= */
 
@@ -317,6 +341,56 @@ canvas {
   color: #777;
   margin-top: 8px;
   text-align: center;
+}
+
+
+/* =========================
+   MODAL KONFIRMASI
+========================= */
+
+#confirmBox {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.45);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 11000;
+  padding: 20px;
+}
+
+.confirmCard {
+  width: 100%;
+  max-width: 380px;
+  background: white;
+  border-radius: 20px;
+  padding: 22px;
+  box-shadow: 0 10px 40px rgba(0,0,0,.25);
+}
+
+.confirmCard h3 {
+  margin-top: 0;
+}
+
+.confirmCard p {
+  color: #666;
+  line-height: 1.5;
+}
+
+.confirmButtons {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.cancelBtn {
+  background: #eee;
+}
+
+.confirmDeleteBtn {
+  background: #ffdede;
+  color: #c40000;
 }
 
 </style>
@@ -359,6 +433,45 @@ canvas {
 ========================= -->
 
 <div id="notification"></div>
+
+
+<!-- =========================
+     KONFIRMASI HAPUS
+========================= -->
+
+<div id="confirmBox">
+
+  <div class="confirmCard">
+
+    <h3>
+      🗑️ Hapus transaksi?
+    </h3>
+
+    <p id="confirmText">
+      Transaksi ini akan dihapus.
+    </p>
+
+    <div class="confirmButtons">
+
+      <button
+        class="cancelBtn"
+        onclick="batalHapus()"
+      >
+        Batal
+      </button>
+
+      <button
+        class="confirmDeleteBtn"
+        onclick="konfirmasiHapus()"
+      >
+        Hapus
+      </button>
+
+    </div>
+
+  </div>
+
+</div>
 
 
 <!-- =========================
@@ -490,6 +603,7 @@ canvas {
       type="text"
       id="keterangan"
       placeholder="Keterangan"
+      autocomplete="off"
     >
 
     <button
@@ -525,7 +639,7 @@ canvas {
 
   <div class="card">
 
-    <h3 id="judulGrafik">
+    <h3>
       📈 Pergerakan Saldo
     </h3>
 
@@ -547,7 +661,6 @@ canvas {
 
 
 <script>
-
 
 /* =========================
    TELEGRAM
@@ -572,29 +685,37 @@ if (
    DATA
 ========================= */
 
-let saldo =
-  Number(
-    localStorage.getItem("saldo")
-  ) || 0;
+let riwayat = [];
+
+try {
+
+  riwayat =
+    JSON.parse(
+      localStorage.getItem("riwayat")
+    ) || [];
+
+  if (!Array.isArray(riwayat)) {
+    riwayat = [];
+  }
+
+} catch (error) {
+
+  riwayat = [];
+
+}
 
 
-let tabungan =
-  Number(
-    localStorage.getItem("tabungan")
-  ) || 0;
+let saldo = 0;
 
-
-let riwayat =
-  JSON.parse(
-    localStorage.getItem("riwayat")
-  ) || [];
-
+let tabungan = 0;
 
 let tipe = "";
 
 let chart = null;
 
 let notificationTimer = null;
+
+let indexHapus = -1;
 
 
 /* =========================
@@ -610,7 +731,9 @@ function rupiah(angka) {
       currency: "IDR",
       maximumFractionDigits: 0
     }
-  ).format(angka);
+  ).format(
+    Number(angka) || 0
+  );
 
 }
 
@@ -623,87 +746,203 @@ function parseNominal(teks) {
 
   if (!teks) return 0;
 
+
   let value =
-    teks
+    String(teks)
       .toLowerCase()
       .trim()
       .replace(/\s/g, "");
 
+
+  if (!value) return 0;
+
+
   let multiplier = 1;
 
+  let hasSuffix = false;
 
-  /* JUTA */
+
+  /* =====================
+     JUTA
+  ====================== */
 
   if (
-    value.endsWith("jt") ||
     value.endsWith("juta")
   ) {
 
     value =
-      value
-        .replace("juta", "")
-        .replace("jt", "");
+      value.slice(
+        0,
+        -4
+      );
 
     multiplier = 1000000;
+
+    hasSuffix = true;
+
+  }
+
+  else if (
+    value.endsWith("jt")
+  ) {
+
+    value =
+      value.slice(
+        0,
+        -2
+      );
+
+    multiplier = 1000000;
+
+    hasSuffix = true;
 
   }
 
 
-  /* RIBU */
+  /* =====================
+     RIBU
+  ====================== */
 
   else if (
-    value.endsWith("rb") ||
-    value.endsWith("ribu") ||
+    value.endsWith("ribu")
+  ) {
+
+    value =
+      value.slice(
+        0,
+        -4
+      );
+
+    multiplier = 1000;
+
+    hasSuffix = true;
+
+  }
+
+  else if (
+    value.endsWith("rb")
+  ) {
+
+    value =
+      value.slice(
+        0,
+        -2
+      );
+
+    multiplier = 1000;
+
+    hasSuffix = true;
+
+  }
+
+  else if (
     value.endsWith("k")
   ) {
 
     value =
-      value
-        .replace("ribu", "")
-        .replace("rb", "")
-        .replace("k", "");
+      value.slice(
+        0,
+        -1
+      );
 
     multiplier = 1000;
 
+    hasSuffix = true;
+
   }
 
 
-  /*
-     Hilangkan titik ribuan.
+  /* =====================
+     BERSIHKAN RP
+  ====================== */
 
-     Contoh:
+  value =
+    value.replace(
+      /^rp/,
+      ""
+    );
+
+
+  /* =====================
+     NOMINAL DENGAN SUFFIX
+     
+     1,5jt
+     1.5jt
+     10rb
+  ====================== */
+
+  if (hasSuffix) {
+
+    value =
+      value.replace(
+        /,/g,
+        "."
+      );
+
+
+    /*
+       Kalau format 1.000rb,
+       titik dianggap pemisah
+       ribuan.
+    */
+
+    const bagian =
+      value.split(".");
+
+
+    if (
+      bagian.length > 2
+    ) {
+
+      value =
+        value.replace(
+          /\./g,
+          ""
+        );
+
+    }
+
+
+    const angka =
+      Number(value);
+
+
+    if (
+      isNaN(angka)
+    ) {
+
+      return 0;
+
+    }
+
+
+    return Math.round(
+      angka * multiplier
+    );
+
+  }
+
+
+  /* =====================
+     NOMINAL BIASA
+     
      10.000 → 10000
-  */
+     10000 → 10000
+  ====================== */
 
   value =
-    value.replace(/\./g, "");
+    value.replace(
+      /[^0-9]/g,
+      ""
+    );
 
 
-  /*
-     Koma menjadi desimal.
-
-     Contoh:
-     1,5jt → 1.5 × 1.000.000
-  */
-
-  value =
-    value.replace(",", ".");
-
-
-  const angka =
-    Number(value);
-
-
-  if (isNaN(angka)) {
-
+  if (!value) {
     return 0;
-
   }
 
 
-  return Math.round(
-    angka * multiplier
-  );
+  return Number(value);
 
 }
 
@@ -775,7 +1014,6 @@ function showForm(jenis) {
 
   }
 
-
   else if (
     jenis === "keluar"
   ) {
@@ -785,7 +1023,6 @@ function showForm(jenis) {
 
   }
 
-
   else if (
     jenis === "tabungan_masuk"
   ) {
@@ -794,7 +1031,6 @@ function showForm(jenis) {
       "💵 Masuk Tabungan";
 
   }
-
 
   else if (
     jenis === "tabungan_keluar"
@@ -835,10 +1071,10 @@ function showForm(jenis) {
 
 function simpan() {
 
-
   const inputJumlah =
-    document
-      .getElementById("jumlah");
+    document.getElementById(
+      "jumlah"
+    );
 
 
   const jumlah =
@@ -854,7 +1090,7 @@ function simpan() {
       .trim();
 
 
-  /* VALIDASI JUMLAH */
+  /* VALIDASI */
 
   if (
     !jumlah ||
@@ -871,8 +1107,6 @@ function simpan() {
   }
 
 
-  /* VALIDASI KETERANGAN */
-
   if (!keterangan) {
 
     notifikasi(
@@ -886,7 +1120,7 @@ function simpan() {
 
 
   /* =====================
-     PEMASUKAN
+     CEK DAN HITUNG
   ====================== */
 
   if (
@@ -895,18 +1129,8 @@ function simpan() {
 
     saldo += jumlah;
 
-
-    notifikasi(
-      "🟢 Pemasukan berhasil! +" +
-      rupiah(jumlah)
-    );
-
   }
 
-
-  /* =====================
-     PENGELUARAN
-  ====================== */
 
   else if (
     tipe === "keluar"
@@ -928,18 +1152,8 @@ function simpan() {
 
     saldo -= jumlah;
 
-
-    notifikasi(
-      "🔴 Pengeluaran berhasil! -" +
-      rupiah(jumlah)
-    );
-
   }
 
-
-  /* =====================
-     TABUNGAN MASUK
-  ====================== */
 
   else if (
     tipe === "tabungan_masuk"
@@ -963,18 +1177,8 @@ function simpan() {
 
     tabungan += jumlah;
 
-
-    notifikasi(
-      "🟡 Berhasil menabung " +
-      rupiah(jumlah)
-    );
-
   }
 
-
-  /* =====================
-     TABUNGAN KELUAR
-  ====================== */
 
   else if (
     tipe === "tabungan_keluar"
@@ -998,19 +1202,12 @@ function simpan() {
 
     saldo += jumlah;
 
-
-    notifikasi(
-      "🟣 Berhasil mengambil " +
-      rupiah(jumlah) +
-      " dari tabungan"
-    );
-
   }
 
 
-  /* =========================
+  /* =====================
      TANGGAL
-  ========================= */
+  ====================== */
 
   const sekarang =
     new Date();
@@ -1026,9 +1223,9 @@ function simpan() {
     );
 
 
-  /* =========================
-     RIWAYAT
-  ========================= */
+  /* =====================
+     TAMBAH RIWAYAT
+  ====================== */
 
   riwayat.push({
 
@@ -1047,36 +1244,62 @@ function simpan() {
   });
 
 
-  /* =========================
-     STORAGE
-  ========================= */
-
-  localStorage.setItem(
-    "saldo",
-    saldo
-  );
+  simpanStorage();
 
 
-  localStorage.setItem(
-    "tabungan",
-    tabungan
-  );
+  /* =====================
+     NOTIFIKASI
+  ====================== */
+
+  if (
+    tipe === "masuk"
+  ) {
+
+    notifikasi(
+      "🟢 Pemasukan berhasil! +" +
+      rupiah(jumlah)
+    );
+
+  }
+
+  else if (
+    tipe === "keluar"
+  ) {
+
+    notifikasi(
+      "🔴 Pengeluaran berhasil! -" +
+      rupiah(jumlah)
+    );
+
+  }
+
+  else if (
+    tipe === "tabungan_masuk"
+  ) {
+
+    notifikasi(
+      "🟡 Berhasil menabung " +
+      rupiah(jumlah)
+    );
+
+  }
+
+  else if (
+    tipe === "tabungan_keluar"
+  ) {
+
+    notifikasi(
+      "🟣 Berhasil mengambil " +
+      rupiah(jumlah) +
+      " dari tabungan"
+    );
+
+  }
 
 
-  localStorage.setItem(
-    "riwayat",
-    JSON.stringify(
-      riwayat
-    )
-  );
-
-
-  /* =========================
-     RESET FORM
-  ========================= */
+  /* RESET */
 
   inputJumlah.value = "";
-
 
   document
     .getElementById("keterangan")
@@ -1089,6 +1312,34 @@ function simpan() {
 
 
   update();
+
+}
+
+
+/* =========================
+   STORAGE
+========================= */
+
+function simpanStorage() {
+
+  localStorage.setItem(
+    "saldo",
+    String(saldo)
+  );
+
+
+  localStorage.setItem(
+    "tabungan",
+    String(tabungan)
+  );
+
+
+  localStorage.setItem(
+    "riwayat",
+    JSON.stringify(
+      riwayat
+    )
+  );
 
 }
 
@@ -1109,12 +1360,56 @@ document
         );
 
 
-      if (angka > 0) {
+      if (
+        angka > 0
+      ) {
 
         this.value =
           angka.toLocaleString(
             "id-ID"
           );
+
+      }
+
+    }
+  );
+
+
+/* =========================
+   ENTER DI INPUT
+========================= */
+
+document
+  .getElementById("jumlah")
+  .addEventListener(
+    "keydown",
+    function(event) {
+
+      if (
+        event.key === "Enter"
+      ) {
+
+        document
+          .getElementById("keterangan")
+          .focus();
+
+      }
+
+    }
+  );
+
+
+document
+  .getElementById("keterangan")
+  .addEventListener(
+    "keydown",
+    function(event) {
+
+      if (
+        event.key === "Enter"
+      ) {
+
+        simpan();
 
       }
 
@@ -1179,11 +1474,22 @@ function tampilkanRiwayat() {
   box.innerHTML = "";
 
 
+  /*
+     Tampilkan terbaru
+     di paling atas.
+  */
+
   riwayat
     .slice()
     .reverse()
     .forEach(
-      function(item) {
+      function(item, reverseIndex) {
+
+        const originalIndex =
+          riwayat.length -
+          1 -
+          reverseIndex;
+
 
         const div =
           document.createElement(
@@ -1215,7 +1521,6 @@ function tampilkanRiwayat() {
 
         }
 
-
         else if (
           item.tipe === "keluar"
         ) {
@@ -1228,7 +1533,6 @@ function tampilkanRiwayat() {
             "Pengeluaran";
 
         }
-
 
         else if (
           item.tipe ===
@@ -1243,7 +1547,6 @@ function tampilkanRiwayat() {
             "Masuk Tabungan";
 
         }
-
 
         else if (
           item.tipe ===
@@ -1275,13 +1578,24 @@ function tampilkanRiwayat() {
 
           <br>
 
-          ${item.keterangan}
+          ${escapeHTML(
+            item.keterangan || ""
+          )}
 
           <br>
 
           <small>
-            📅 ${item.tanggal}
+            📅 ${item.tanggal || ""}
           </small>
+
+          <br>
+
+          <button
+            class="deleteBtn"
+            onclick="mintaHapus(${originalIndex})"
+          >
+            🗑️ Hapus
+          </button>
 
         `;
 
@@ -1297,312 +1611,28 @@ function tampilkanRiwayat() {
 
 
 /* =========================
-   GRAFIK SALDO
+   ESCAPE HTML
 ========================= */
 
-function buatGrafik() {
+function escapeHTML(text) {
 
-  const canvas =
-    document.getElementById(
-      "grafik"
+  const div =
+    document.createElement(
+      "div"
     );
 
 
-  if (chart) {
+  div.textContent =
+    text;
 
-    chart.destroy();
 
-  }
+  return div.innerHTML;
 
+}
 
-  /* =========================
-     TIDAK ADA TRANSAKSI
-  ========================= */
 
-  if (
-    riwayat.length === 0
-  ) {
+/* =========================
+   MINTA HAPUS
+========================= */
 
-    chart =
-      new Chart(
-        canvas.getContext("2d"),
-        {
-
-          type: "line",
-
-          data: {
-
-            labels: [
-              "Awal"
-            ],
-
-            datasets: [
-
-              {
-
-                label:
-                  "Saldo",
-
-                data: [
-                  0
-                ],
-
-                tension: .35,
-
-                fill: false,
-
-                pointRadius: 5
-
-              }
-
-            ]
-
-          },
-
-          options: {
-
-            responsive: true,
-
-            maintainAspectRatio: false,
-
-            scales: {
-
-              y: {
-
-                beginAtZero: true
-
-              }
-
-            }
-
-          }
-
-        }
-      );
-
-
-    return;
-
-  }
-
-
-  /* =========================
-     URUTKAN DATA
-  ========================= */
-
-  const data =
-    riwayat
-      .slice()
-      .sort(
-        function(a, b) {
-
-          return (
-            (a.timestamp || 0) -
-            (b.timestamp || 0)
-          );
-
-        }
-      );
-
-
-  const labels =
-    data.map(
-      function(item, index) {
-
-        return "#" +
-          (index + 1);
-
-      }
-    );
-
-
-  /*
-     Ambil saldo setelah
-     setiap transaksi.
-
-     Untuk transaksi lama
-     yang belum memiliki
-     saldoSetelah, hitung
-     ulang dari awal.
-  */
-
-  let saldoHitung = 0;
-
-
-  const saldoData =
-    data.map(
-      function(item) {
-
-
-        if (
-          typeof item.saldoSetelah ===
-          "number"
-        ) {
-
-          saldoHitung =
-            item.saldoSetelah;
-
-        }
-
-
-        else {
-
-          if (
-            item.tipe === "masuk"
-          ) {
-
-            saldoHitung +=
-              Number(item.jumlah) || 0;
-
-          }
-
-
-          else if (
-            item.tipe === "keluar"
-          ) {
-
-            saldoHitung -=
-              Number(item.jumlah) || 0;
-
-          }
-
-
-          else if (
-            item.tipe ===
-            "tabungan_masuk"
-          ) {
-
-            saldoHitung -=
-              Number(item.jumlah) || 0;
-
-          }
-
-
-          else if (
-            item.tipe ===
-            "tabungan_keluar"
-          ) {
-
-            saldoHitung +=
-              Number(item.jumlah) || 0;
-
-          }
-
-        }
-
-
-        return saldoHitung;
-
-      }
-    );
-
-
-  /* =========================
-     GRAFIK
-  ========================= */
-
-  chart =
-    new Chart(
-      canvas.getContext("2d"),
-      {
-
-        type: "line",
-
-        data: {
-
-          labels: labels,
-
-          datasets: [
-
-            {
-
-              label:
-                "Saldo",
-
-              data:
-                saldoData,
-
-              tension: .35,
-
-              fill: true,
-
-              pointRadius: 5,
-
-              pointHoverRadius: 8,
-
-              borderWidth: 3
-
-            }
-
-          ]
-
-        },
-
-
-        options: {
-
-          responsive: true,
-
-          maintainAspectRatio: false,
-
-
-          interaction: {
-
-            intersect: false,
-
-            mode: "index"
-
-          },
-
-
-          plugins: {
-
-            legend: {
-
-              display: true
-
-            },
-
-
-            tooltip: {
-
-              callbacks: {
-
-                title:
-                  function(context) {
-
-                    const index =
-                      context[0].dataIndex;
-
-                    return (
-                      "Transaksi #" +
-                      (index + 1)
-                    );
-
-                  },
-
-
-                label:
-                  function(context) {
-
-                    return (
-                      "Saldo: " +
-                      rupiah(
-                        context.raw
-                      )
-                    );
-
-                  }
-
-              }
-
-            }
-
-          },
-
-
-          scales: {
-
-            y: {
-
-              beg
+funct
