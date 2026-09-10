@@ -8,511 +8,724 @@
 <style>
 *{box-sizing:border-box}
 body{margin:0;font-family:Arial,sans-serif;background:#f3f4f6;color:#111827}
-.app{max-width:760px;margin:auto;padding:18px}
-h1{margin:0;font-size:28px}.sub{color:#6b7280;margin:5px 0 18px}
-.card{background:white;border-radius:18px;padding:18px;margin-bottom:14px;box-shadow:0 4px 18px rgba(0,0,0,.06)}
-.balance{font-size:34px;font-weight:800;margin:8px 0}
+.app{max-width:760px;margin:auto;padding:16px 14px 90px}
+header{padding:10px 4px 18px}
+h1{margin:0;font-size:28px}.sub{color:#6b7280;margin-top:5px}
+.card{background:#fff;border-radius:18px;padding:17px;margin-bottom:14px;box-shadow:0 4px 18px rgba(0,0,0,.06)}
+.balance{font-size:32px;font-weight:800;margin:6px 0 14px}
 .grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.stat{padding:14px;border-radius:14px;background:#f9fafb}.stat b{display:block;font-size:20px;margin-top:5px}
-label{display:block;font-weight:700;margin:12px 0 6px}
-input,select,button{width:100%;padding:13px;border:1px solid #d1d5db;border-radius:12px;font-size:16px}
-button{border:0;background:#111827;color:white;font-weight:700;cursor:pointer;margin-top:12px}
+.stat{padding:13px;border-radius:14px;background:#f9fafb}
+.stat b{display:block;font-size:19px;margin-top:5px}
+.menu{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:14px}
+.menu button{margin:0;padding:12px 6px;background:#e5e7eb;color:#111827}
+.menu button.active{background:#111827;color:#fff}
+.section{display:none}.section.active{display:block}
+label{display:block;font-weight:700;margin:11px 0 6px}
+input,select,button{width:100%;padding:12px;border:1px solid #d1d5db;border-radius:12px;font-size:16px}
+button{border:0;background:#111827;color:#fff;font-weight:700;cursor:pointer;margin-top:10px}
 button.secondary{background:#e5e7eb;color:#111827}
-button.danger{background:#dc2626}
-.progress{height:14px;background:#e5e7eb;border-radius:99px;overflow:hidden;margin:12px 0}
-.progress>div{height:100%;width:0;background:#111827;transition:width .3s}
 .target-row{display:flex;justify-content:space-between;gap:10px;align-items:center}
 .target-row button{width:auto;margin:0;padding:8px 12px}
-.history-item{padding:13px 0;border-bottom:1px solid #e5e7eb}
+.progress{height:14px;background:#e5e7eb;border-radius:99px;overflow:hidden;margin:12px 0}
+.progress>div{height:100%;width:0;background:#111827;transition:width .3s}
+.muted{color:#6b7280;font-size:13px}
+.history-item{padding:14px 0;border-bottom:1px solid #e5e7eb}
 .history-item:last-child{border-bottom:0}
 .history-top{display:flex;justify-content:space-between;gap:8px;font-weight:700}
-.muted{color:#6b7280;font-size:13px}
 .plus{color:#15803d}.minus{color:#dc2626}
-.empty{text-align:center;color:#6b7280;padding:20px}
-.toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%) translateY(20px);background:#111827;color:white;padding:12px 18px;border-radius:12px;opacity:0;pointer-events:none;transition:.25s;z-index:20;max-width:90%}
+.empty{text-align:center;color:#6b7280;padding:24px 8px}
+.search-row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.month-title{font-size:17px;font-weight:800;margin:18px 0 5px}
+.toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%) translateY(20px);background:#111827;color:#fff;padding:12px 18px;border-radius:12px;opacity:0;pointer-events:none;transition:.25s;z-index:20;max-width:90%;text-align:center}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
-.loading{position:fixed;inset:0;background:#f3f4f6;display:flex;align-items:center;justify-content:center;z-index:99}
-.loader{text-align:center}.bee{font-size:58px}.loader b{display:block;margin-top:8px}
-canvas{width:100%!important;max-height:300px}
-.auth{max-width:420px;margin:40px auto}
-#mainApp{display:none}
-#userEmail{word-break:break-all}
-@media(max-width:480px){.app{padding:12px}.grid{grid-template-columns:1fr}.balance{font-size:29px}}
+.loading{position:fixed;inset:0;background:#f3f4f6;display:flex;align-items:center;justify-content:center;z-index:99;transition:opacity .2s}
+.loading.hide{opacity:0;pointer-events:none}
+.loader{text-align:center}.bee{font-size:56px}.loader b{display:block;margin-top:8px}
+canvas{width:100%!important;height:300px!important}
+.notice{padding:12px;border-radius:12px;background:#f9fafb;margin-top:10px}
+.auth{max-width:760px;margin:auto;padding:30px 14px}
+.auth .card{margin-top:40px}
+.auth-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+@media(max-width:480px){
+ .app{padding:12px 10px 80px}.balance{font-size:29px}
+ .menu button{font-size:13px;padding:11px 3px}
+ .grid,.search-row{grid-template-columns:1fr}
+ .auth-actions{grid-template-columns:1fr}
+}
+.hidden{display:none!important}
 </style>
 </head>
 <body>
 
 <div id="loading" class="loading">
-  <div class="loader"><div class="bee">🐝</div><b>Money Archives</b><div class="muted">Memuat...</div></div>
+  <div class="loader">
+    <div class="bee">🐝</div>
+    <b>Money Archives</b>
+    <div id="loadingText" class="muted">Menyiapkan aplikasi...</div>
+  </div>
 </div>
 
-<div id="authApp" class="app auth">
+<div id="authScreen" class="auth hidden">
   <div class="card">
-    <h1>💰 Money Archives</h1>
-    <div class="sub">Masuk untuk menyimpan data ke Supabase.</div>
+    <h2>🔐 Money Archives</h2>
+    <div class="muted">Masuk untuk menyimpan data keuanganmu di cloud.</div>
 
     <label>Email</label>
-    <input id="email" type="email" placeholder="email@contoh.com" autocomplete="email">
+    <input id="email" type="email" autocomplete="email" placeholder="email@example.com">
 
     <label>Password</label>
-    <input id="password" type="password" placeholder="Minimal 6 karakter" autocomplete="current-password">
+    <input id="password" type="password" autocomplete="current-password" placeholder="Minimal 6 karakter">
 
-    <button onclick="login()">Masuk</button>
-    <button class="secondary" onclick="daftar()">Buat Akun</button>
-
-    <div id="authInfo" class="muted" style="margin-top:12px"></div>
+    <div class="auth-actions">
+      <button onclick="masuk()">Masuk</button>
+      <button class="secondary" onclick="daftar()">Daftar</button>
+    </div>
   </div>
 </div>
 
-<div id="mainApp" class="app">
-  <div class="card">
-    <div class="muted">Akun</div>
-    <b id="userEmail"></b>
-    <button class="secondary" onclick="logout()">Keluar</button>
-  </div>
-
+<div id="app" class="app hidden">
+<header>
   <h1>💰 Money Archives</h1>
-  <div class="sub">Kelola uang dan target tabunganmu.</div>
+  <div class="sub">Catatan keuanganmu, lebih rapi.</div>
+</header>
 
-  <div class="card">
-    <div class="muted">Saldo</div>
-    <div id="saldo" class="balance">Rp0</div>
-    <div class="grid">
-      <div class="stat"><span class="muted">Pemasukan</span><b id="totalMasuk">Rp0</b></div>
-      <div class="stat"><span class="muted">Pengeluaran</span><b id="totalKeluar">Rp0</b></div>
+<div class="card">
+  <div class="muted">Saldo Saat Ini</div>
+  <div id="saldo" class="balance">Rp0</div>
+  <div class="grid">
+    <div class="stat"><span class="muted">Pemasukan</span><b id="totalMasuk">Rp0</b></div>
+    <div class="stat"><span class="muted">Pengeluaran</span><b id="totalKeluar">Rp0</b></div>
+  </div>
+</div>
+
+<div class="menu">
+  <button id="mA" class="active" onclick="bukaMenu('A')">A<br>💸 Uang</button>
+  <button id="mB" onclick="bukaMenu('B')">B<br>🎯 Tabungan</button>
+  <button id="mC" onclick="bukaMenu('C')">C<br>📈 Grafik</button>
+  <button id="mD" onclick="bukaMenu('D')">D<br>📜 Riwayat</button>
+</div>
+
+<!-- A -->
+<section id="secA" class="section active">
+<div class="card">
+  <h2>💸 Pemasukan & Pengeluaran</h2>
+  <label>Jenis</label>
+  <select id="jenis">
+    <option value="masuk">➕ Pemasukan</option>
+    <option value="keluar">➖ Pengeluaran</option>
+  </select>
+  <label>Nominal</label>
+  <input id="nominal" inputmode="text" placeholder="10rb, 10k, 1jt, 1,5jt, 10.000">
+  <label>Keterangan</label>
+  <input id="keterangan" placeholder="Contoh: Gaji, makan, bensin...">
+  <button onclick="tambahUang()">Simpan</button>
+</div>
+</section>
+
+<!-- B -->
+<section id="secB" class="section">
+<div class="card">
+  <div class="target-row">
+    <div><div class="muted">🎯 Target Tabungan</div><b id="targetText">Belum ada target</b></div>
+    <button class="secondary" onclick="ubahTarget()">Atur</button>
+  </div>
+  <div id="targetInfo" class="muted" style="margin-top:10px">Atur target tabunganmu.</div>
+  <div class="progress"><div id="progressBar"></div></div>
+</div>
+
+<div class="card">
+  <h2>🏦 Tabungan</h2>
+  <div class="stat"><span class="muted">Tabungan Saat Ini</span><b id="tabungan">Rp0</b></div>
+  <label>Jenis</label>
+  <select id="jenisTabungan">
+    <option value="tabungan_masuk">🏦 Masukkan ke Tabungan</option>
+    <option value="tabungan_keluar">↩️ Ambil dari Tabungan</option>
+  </select>
+  <label>Nominal</label>
+  <input id="nominalTabungan" inputmode="text" placeholder="Contoh: 50rb">
+  <label>Keterangan</label>
+  <input id="keteranganTabungan" placeholder="Contoh: Nabung mingguan...">
+  <button onclick="tambahTabungan()">Simpan</button>
+</div>
+</section>
+
+<!-- C -->
+<section id="secC" class="section">
+<div class="card">
+  <h2>📈 Grafik Saldo</h2>
+  <div id="chartStatus" class="muted">Grafik sedang disiapkan...</div>
+  <canvas id="chart"></canvas>
+</div>
+</section>
+
+<!-- D -->
+<section id="secD" class="section">
+<div class="card">
+  <h2>📜 Riwayat Transaksi</h2>
+  <div class="search-row">
+    <div>
+      <label>Bulan</label>
+      <select id="filterBulan" onchange="renderHistory()">
+        <option value="all">Semua bulan</option>
+        <option value="0">Januari</option><option value="1">Februari</option>
+        <option value="2">Maret</option><option value="3">April</option>
+        <option value="4">Mei</option><option value="5">Juni</option>
+        <option value="6">Juli</option><option value="7">Agustus</option>
+        <option value="8">September</option><option value="9">Oktober</option>
+        <option value="10">November</option><option value="11">Desember</option>
+      </select>
+    </div>
+    <div>
+      <label>Tahun</label>
+      <select id="filterTahun" onchange="renderHistory()">
+        <option value="all">Semua tahun</option>
+      </select>
     </div>
   </div>
+  <label>Cari keterangan</label>
+  <input id="search" oninput="renderHistory()" placeholder="Cari: gaji, makan, bensin...">
+  <div class="notice muted">🔒 Riwayat tersimpan di cloud dan hanya terlihat oleh akunmu.</div>
+  <div id="history"></div>
+</div>
+</section>
 
-  <div class="card">
-    <div class="target-row">
-      <div><div class="muted">🎯 Target Tabungan</div><b id="targetText">Belum ada target</b></div>
-      <button class="secondary" onclick="ubahTarget()">Atur</button>
-    </div>
-    <div id="targetInfo" class="muted" style="margin-top:10px">Atur target untuk melihat progres.</div>
-    <div class="progress"><div id="progressBar"></div></div>
-  </div>
-
-  <div class="card">
-    <div class="grid">
-      <div class="stat"><span class="muted">Tabungan</span><b id="tabungan">Rp0</b></div>
-      <div class="stat"><span class="muted">Transaksi</span><b id="jumlahTransaksi">0</b></div>
-    </div>
-  </div>
-
-  <div class="card">
-    <h2>➕ Tambah Transaksi</h2>
-    <label>Jenis</label>
-    <select id="jenis">
-      <option value="masuk">Pemasukan</option>
-      <option value="keluar">Pengeluaran</option>
-      <option value="tabungan_masuk">Tabungan Masuk</option>
-      <option value="tabungan_keluar">Tabungan Keluar</option>
-    </select>
-
-    <label>Nominal</label>
-    <input id="nominal" inputmode="text" placeholder="Contoh: 10rb, 1,5jt, 10.000">
-
-    <label>Keterangan</label>
-    <input id="keterangan" placeholder="Contoh: Gaji, makan, nabung...">
-
-    <button onclick="tambahTransaksi()">Simpan Transaksi</button>
-  </div>
-
-  <div class="card">
-    <h2>📈 Pergerakan Saldo</h2>
-    <div id="chartStatus" class="muted">Grafik sedang disiapkan...</div>
-    <canvas id="chart"></canvas>
-  </div>
-
-  <div class="card">
-    <h2>📝 Riwayat</h2>
-    <div id="history"></div>
-    <button class="danger" onclick="hapusSemua()">Hapus Semua Riwayat</button>
-  </div>
+<div class="card">
+  <button class="secondary" onclick="keluarAkun()">🚪 Keluar dari akun</button>
+</div>
 </div>
 
 <div id="toast" class="toast"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
-const SUPABASE_URL = "https://bqjzwwdhscgwmecuaveo.supabase.co";
-const SUPABASE_KEY = "sb_publishable_HDrPq5sqxx8Pwk8j2p3kuw_U7j4fz3s";
-const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const SUPABASE_URL="https://bqjzwwdhscgwmecuaveo.supabase.co";
+const SUPABASE_KEY="sb_publishable_HDrPq5sqxx8Pwk8j2p3kuw_U7j4fz3s";
+const supabaseClient=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
 
-let user = null;
-let data = {saldo:0, tabungan:0, target:0, riwayat:[]};
-let chart = null;
-let chartReady = false;
+let user=null;
+let chart=null,chartReady=false;
+let data={saldo:0,tabungan:0,target:0,riwayat:[]};
+const namaBulan=["Januari","Februari","Maret","April","Mei","Juni","Juli","Agustus","September","Oktober","November","Desember"];
 
 function rupiah(n){
-  return new Intl.NumberFormat("id-ID",{style:"currency",currency:"IDR",maximumFractionDigits:0}).format(Number(n)||0);
+ return new Intl.NumberFormat("id-ID",{style:"currency",currency:"IDR",maximumFractionDigits:0}).format(Number(n)||0);
 }
 
 function escapeHTML(s){
-  return String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]));
+ return String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]));
 }
 
 function parseNominal(value){
-  let s=String(value).toLowerCase().trim().replace(/\s+/g,"");
-  if(!s) return NaN;
-  let mult=1;
-  if(s.endsWith("jt")||s.endsWith("juta")){mult=1000000;s=s.replace(/juta?$/,"");}
-  else if(s.endsWith("rb")||s.endsWith("ribu")){mult=1000;s=s.replace(/ribu?$/,"");}
-  else if(s.endsWith("k")){mult=1000;s=s.slice(0,-1);}
-  s=s.replace(/[^\d.,-]/g,"");
-  if(!s) return NaN;
-  if(mult!==1){
-    s=s.replace(/\./g,"").replace(",",".");
-    const n=parseFloat(s);
-    return Number.isFinite(n)?Math.round(n*mult):NaN;
-  }
-  if(s.includes(",")){
-    s=s.replace(/\./g,"").replace(",",".");
-    const n=parseFloat(s);
-    return Number.isFinite(n)?Math.round(n):NaN;
-  }
-  if(/^\d{1,3}(\.\d{3})+$/.test(s)) s=s.replace(/\./g,"");
-  const n=Number(s);
-  return Number.isFinite(n)?Math.round(n):NaN;
+ let s=String(value).toLowerCase().trim().replace(/\s+/g,"");
+ if(!s)return NaN;
+ let mult=1;
+ if(s.endsWith("juta")||s.endsWith("jt")){
+   mult=1000000;s=s.replace(/juta$/,"").replace(/jt$/,"");
+ }else if(s.endsWith("ribu")||s.endsWith("rb")){
+   mult=1000;s=s.replace(/ribu$/,"").replace(/rb$/,"");
+ }else if(s.endsWith("k")){
+   mult=1000;s=s.slice(0,-1);
+ }
+ s=s.replace(/[^\d.,-]/g,"");
+ if(!s)return NaN;
+ if(mult!==1){
+   s=s.replace(/\./g,"").replace(",",".");
+   const n=parseFloat(s);return Number.isFinite(n)?Math.round(n*mult):NaN;
+ }
+ if(s.includes(",")){
+   s=s.replace(/\./g,"").replace(",",".");
+   const n=parseFloat(s);return Number.isFinite(n)?Math.round(n):NaN;
+ }
+ if(/^\d{1,3}(\.\d{3})+$/.test(s))s=s.replace(/\./g,"");
+ const n=Number(s);return Number.isFinite(n)?Math.round(n):NaN;
 }
 
 function toast(msg){
-  const el=document.getElementById("toast");
-  el.textContent=msg;el.classList.add("show");
-  clearTimeout(window.toastTimer);
-  window.toastTimer=setTimeout(()=>el.classList.remove("show"),2500);
+ const el=document.getElementById("toast");
+ el.textContent=msg;el.classList.add("show");
+ clearTimeout(window.toastTimer);
+ window.toastTimer=setTimeout(()=>el.classList.remove("show"),2800);
 }
 
-function authInfo(msg){
-  document.getElementById("authInfo").textContent=msg||"";
-}
-
-async function daftar(){
-  const email=document.getElementById("email").value.trim();
-  const password=document.getElementById("password").value;
-  if(!email||password.length<6){authInfo("Isi email dan password minimal 6 karakter.");return;}
-  authInfo("Membuat akun...");
-  const {error}=await supabaseClient.auth.signUp({email,password});
-  if(error){authInfo("❌ "+error.message);return;}
-  authInfo("✅ Akun dibuat. Jika diminta, cek email untuk verifikasi, lalu tekan Masuk.");
-}
-
-async function login(){
-  const email=document.getElementById("email").value.trim();
-  const password=document.getElementById("password").value;
-  if(!email||!password){authInfo("Isi email dan password.");return;}
-  authInfo("Memeriksa akun...");
-  const {data:res,error}=await supabaseClient.auth.signInWithPassword({email,password});
-  if(error){authInfo("❌ "+error.message);return;}
-  user=res.user;
-  await mulaiSetelahLogin();
-}
-
-async function logout(){
-  await supabaseClient.auth.signOut();
-  user=null;
-  data={saldo:0,tabungan:0,target:0,riwayat:[]};
-  document.getElementById("mainApp").style.display="none";
-  document.getElementById("authApp").style.display="block";
-  authInfo("Kamu sudah keluar.");
-}
-
-async function mulaiSetelahLogin(){
-  document.getElementById("authApp").style.display="none";
-  document.getElementById("mainApp").style.display="block";
-  document.getElementById("userEmail").textContent=user.email||"";
-  await muatDariSupabase();
-}
-
-async function muatDariSupabase(){
-  const {data:pengaturan,error:e1}=await supabaseClient
-    .from("pengaturan")
-    .select("user_id,saldo,tabungan,target,mata_uang,updated_at")
-    .eq("user_id",user.id)
-    .maybeSingle();
-
-  if(e1){toast("❌ Gagal membaca pengaturan: "+e1.message);return;}
-
-  if(pengaturan){
-    data.saldo=Number(pengaturan.saldo)||0;
-    data.tabungan=Number(pengaturan.tabungan)||0;
-    data.target=Number(pengaturan.target)||0;
-  }else{
-    const {error}=await supabaseClient.from("pengaturan").insert({
-      user_id:user.id,saldo:0,tabungan:0,target:0,mata_uang:"IDR"
-    });
-    if(error){toast("❌ Gagal membuat pengaturan: "+error.message);return;}
-  }
-
-  const {data:rows,error:e2}=await supabaseClient
-    .from("transaksi")
-    .select("id,user_id,tanggal,jenis,jumlah,keterangan,timestamp,saldo_setelah,tabungan_setelah")
-    .eq("user_id",user.id)
-    .order("timestamp",{ascending:true});
-
-  if(e2){toast("❌ Gagal membaca transaksi: "+e2.message);return;}
-
-  data.riwayat=(rows||[]).map(t=>({
-    id:t.id,
-    jenis:t.jenis,
-    jumlah:Number(t.jumlah)||0,
-    keterangan:t.keterangan||"Tanpa keterangan",
-    timestamp:t.timestamp || (t.tanggal ? t.tanggal+"T00:00:00" : new Date().toISOString()),
-    saldoSetelah:Number(t.saldo_setelah)||0,
-    tabunganSetelah:Number(t.tabungan_setelah)||0
-  }));
-
-  updateTampilan();
-}
-
-async function simpanPengaturan(){
-  const {error}=await supabaseClient.from("pengaturan").upsert({
-    user_id:user.id,
-    saldo:data.saldo,
-    tabungan:data.tabungan,
-    target:data.target,
-    mata_uang:"IDR",
-    updated_at:new Date().toISOString()
-  },{onConflict:"user_id"});
-  if(error) throw error;
+function bukaMenu(menu){
+ ["A","B","C","D"].forEach(x=>{
+   document.getElementById("sec"+x).classList.toggle("active",x===menu);
+   document.getElementById("m"+x).classList.toggle("active",x===menu);
+ });
+ if(menu==="C"&&chartReady)setTimeout(buatGrafik,0);
+ if(menu==="D")renderHistory();
 }
 
 function updateTampilan(){
-  document.getElementById("saldo").textContent=rupiah(data.saldo);
-  document.getElementById("tabungan").textContent=rupiah(data.tabungan);
-  document.getElementById("jumlahTransaksi").textContent=data.riwayat.length;
+ document.getElementById("saldo").textContent=rupiah(data.saldo);
+ document.getElementById("tabungan").textContent=rupiah(data.tabungan);
+ let masuk=0,keluar=0;
+ data.riwayat.forEach(t=>{
+   if(t.jenis==="masuk")masuk+=t.jumlah;
+   if(t.jenis==="keluar")keluar+=t.jumlah;
+ });
+ document.getElementById("totalMasuk").textContent=rupiah(masuk);
+ document.getElementById("totalKeluar").textContent=rupiah(keluar);
 
-  let masuk=0,keluar=0;
-  data.riwayat.forEach(t=>{
-    if(t.jenis==="masuk") masuk+=t.jumlah;
-    if(t.jenis==="keluar") keluar+=t.jumlah;
-  });
-  document.getElementById("totalMasuk").textContent=rupiah(masuk);
-  document.getElementById("totalKeluar").textContent=rupiah(keluar);
-
-  if(data.target>0){
-    const persen=Math.min(100,(data.tabungan/data.target)*100);
-    document.getElementById("targetText").textContent=rupiah(data.target);
-    document.getElementById("targetInfo").textContent=
-      rupiah(data.tabungan)+" / "+rupiah(data.target)+" • "+persen.toFixed(1)+"%";
-    document.getElementById("progressBar").style.width=persen+"%";
-  }else{
-    document.getElementById("targetText").textContent="Belum ada target";
-    document.getElementById("targetInfo").textContent="Atur target untuk melihat progres.";
-    document.getElementById("progressBar").style.width="0%";
-  }
-
-  renderHistory();
-  if(chartReady)setTimeout(buatGrafik,0);
+ if(data.target>0){
+   const p=Math.min(100,data.tabungan/data.target*100);
+   document.getElementById("targetText").textContent=rupiah(data.target);
+   document.getElementById("targetInfo").textContent=rupiah(data.tabungan)+" / "+rupiah(data.target)+" • "+p.toFixed(1)+"%";
+   document.getElementById("progressBar").style.width=p+"%";
+ }else{
+   document.getElementById("targetText").textContent="Belum ada target";
+   document.getElementById("targetInfo").textContent="Atur target tabunganmu.";
+   document.getElementById("progressBar").style.width="0%";
+ }
+ isiTahun();renderHistory();
+ if(chartReady)setTimeout(buatGrafik,0);
 }
 
-async function tambahTransaksi(){
-  const jenis=document.getElementById("jenis").value;
-  const jumlah=parseNominal(document.getElementById("nominal").value);
-  const ket=document.getElementById("keterangan").value.trim();
+async function loadData(){
+ const [p,t]=await Promise.all([
+   supabaseClient.from("pengaturan").select("*").eq("user_id",user.id).maybeSingle(),
+   supabaseClient.from("transaksi").select("id,user_id,tanggal,jenis,kategori,jumlah,keterangan,created_at,timestamp,saldo_setelah,tabungan_setelah").eq("user_id",user.id).order("timestamp",{ascending:true})
+ ]);
+ if(p.error)throw p.error;
+ if(t.error)throw t.error;
 
-  if(!Number.isFinite(jumlah)||jumlah<=0){toast("❌ Nominal tidak valid");return;}
+ data={
+   saldo:Number(p.data?.saldo)||0,
+   tabungan:Number(p.data?.tabungan)||0,
+   target:Number(p.data?.target)||0,
+   riwayat:(t.data||[]).map(r=>({
+     id:r.id,
+     jenis:r.jenis,
+     jumlah:Number(r.jumlah)||0,
+     keterangan:r.keterangan||"Tanpa keterangan",
+     timestamp:r.timestamp||r.created_at||((r.tanggal||"1970-01-01")+"T00:00:00Z"),
+     saldoSetelah:Number(r.saldo_setelah)||0,
+     tabunganSetelah:Number(r.tabungan_setelah)||0
+   }))
+ };
+}
 
-  let saldoBaru=data.saldo;
-  let tabunganBaru=data.tabungan;
+async function simpanPengaturan(){
+ const {error}=await supabaseClient.from("pengaturan").upsert({
+   user_id:user.id,
+   saldo:data.saldo,
+   tabungan:data.tabungan,
+   target:data.target,
+   mata_uang:"IDR",
+   updated_at:new Date().toISOString()
+ },{onConflict:"user_id"});
+ if(error)throw error;
+}
 
-  if(jenis==="masuk") saldoBaru+=jumlah;
-  if(jenis==="keluar"){
-    if(jumlah>saldoBaru){toast("❌ Saldo tidak cukup");return;}
-    saldoBaru-=jumlah;
-  }
-  if(jenis==="tabungan_masuk"){
-    if(jumlah>saldoBaru){toast("❌ Saldo tidak cukup");return;}
-    saldoBaru-=jumlah;tabunganBaru+=jumlah;
-  }
-  if(jenis==="tabungan_keluar"){
-    if(jumlah>tabunganBaru){toast("❌ Tabungan tidak cukup");return;}
-    tabunganBaru-=jumlah;saldoBaru+=jumlah;
-  }
+async function tambahUang(){
+ const jenis=document.getElementById("jenis").value;
+ const jumlah=parseNominal(document.getElementById("nominal").value);
+ const ket=document.getElementById("keterangan").value.trim();
 
-  const now=new Date().toISOString();
-  const row={
-    user_id:user.id,
-    tanggal:new Date().toISOString().slice(0,10),
-    jenis,
-    jumlah,
-    keterangan:ket||"Tanpa keterangan",
-    timestamp:now,
-    saldo_setelah:saldoBaru,
-    tabungan_setelah:tabunganBaru
-  };
+ if(!Number.isFinite(jumlah)||jumlah<=0){
+   toast("❌ Nominal tidak valid");return;
+ }
 
-  const {data:inserted,error}=await supabaseClient.from("transaksi").insert(row).select().single();
-  if(error){toast("❌ Gagal menyimpan transaksi: "+error.message);return;}
+ let saldoBaru=data.saldo;
+ if(jenis==="masuk")saldoBaru+=jumlah;
+ else{
+   if(jumlah>saldoBaru){toast("❌ Saldo tidak cukup");return;}
+   saldoBaru-=jumlah;
+ }
 
-  data.saldo=saldoBaru;
-  data.tabungan=tabunganBaru;
-  data.riwayat.push({
-    id:inserted.id,
-    jenis:inserted.jenis,
-    jumlah:Number(inserted.jumlah),
-    keterangan:inserted.keterangan,
-    timestamp:inserted.timestamp||now,
-    saldoSetelah:Number(inserted.saldo_setelah)||saldoBaru,
-    tabunganSetelah:Number(inserted.tabungan_setelah)||tabunganBaru
-  });
+ const ts=new Date().toISOString();
+ const {data:row,error}=await supabaseClient.from("transaksi").insert({
+   user_id:user.id,
+   tanggal:ts.slice(0,10),
+   jenis:jenis,
+   kategori:null,
+   jumlah:jumlah,
+   keterangan:ket||"Tanpa keterangan",
+   timestamp:ts,
+   saldo_setelah:saldoBaru,
+   tabungan_setelah:data.tabungan
+ }).select("id").single();
 
-  try{
-    await simpanPengaturan();
-  }catch(e){
-    toast("⚠️ Transaksi tersimpan, tetapi pengaturan gagal diperbarui: "+e.message);
-  }
+ if(error){
+   toast("❌ Gagal menyimpan transaksi: "+error.message);
+   return;
+ }
 
-  document.getElementById("nominal").value="";
-  document.getElementById("keterangan").value="";
-  updateTampilan();
-  toast("✅ Transaksi tersimpan di Supabase");
-  if(data.target>0&&data.tabungan>=data.target)setTimeout(()=>toast("🏆 Target tabungan tercapai!"),500);
+ data.saldo=saldoBaru;
+ data.riwayat.push({
+   id:row.id,jenis:jenis,jumlah:jumlah,
+   keterangan:ket||"Tanpa keterangan",timestamp:ts,
+   saldoSetelah:data.saldo,tabunganSetelah:data.tabungan
+ });
+
+ try{
+   await simpanPengaturan();
+ }catch(e){
+   toast("⚠️ Transaksi tersimpan, tetapi pengaturan gagal: "+e.message);
+   updateTampilan();
+   return;
+ }
+
+ document.getElementById("nominal").value="";
+ document.getElementById("keterangan").value="";
+ updateTampilan();
+ toast("✅ Transaksi tersimpan");
+}
+
+async function tambahTabungan(){
+ const jenis=document.getElementById("jenisTabungan").value;
+ const jumlah=parseNominal(document.getElementById("nominalTabungan").value);
+ const ket=document.getElementById("keteranganTabungan").value.trim();
+
+ if(!Number.isFinite(jumlah)||jumlah<=0){
+   toast("❌ Nominal tidak valid");return;
+ }
+
+ let saldoBaru=data.saldo;
+ let tabunganBaru=data.tabungan;
+
+ if(jenis==="tabungan_masuk"){
+   if(jumlah>saldoBaru){toast("❌ Saldo tidak cukup");return;}
+   saldoBaru-=jumlah;tabunganBaru+=jumlah;
+ }else{
+   if(jumlah>tabunganBaru){toast("❌ Tabungan tidak cukup");return;}
+   tabunganBaru-=jumlah;saldoBaru+=jumlah;
+ }
+
+ const ts=new Date().toISOString();
+ const {data:row,error}=await supabaseClient.from("transaksi").insert({
+   user_id:user.id,
+   tanggal:ts.slice(0,10),
+   jenis:jenis,
+   kategori:null,
+   jumlah:jumlah,
+   keterangan:ket||"Tanpa keterangan",
+   timestamp:ts,
+   saldo_setelah:saldoBaru,
+   tabungan_setelah:tabunganBaru
+ }).select("id").single();
+
+ if(error){
+   toast("❌ Gagal menyimpan transaksi: "+error.message);
+   return;
+ }
+
+ data.saldo=saldoBaru;
+ data.tabungan=tabunganBaru;
+ data.riwayat.push({
+   id:row.id,jenis:jenis,jumlah:jumlah,
+   keterangan:ket||"Tanpa keterangan",timestamp:ts,
+   saldoSetelah:data.saldo,tabunganSetelah:data.tabungan
+ });
+
+ try{
+   await simpanPengaturan();
+ }catch(e){
+   toast("⚠️ Tabungan tersimpan, tetapi pengaturan gagal: "+e.message);
+   updateTampilan();
+   return;
+ }
+
+ document.getElementById("nominalTabungan").value="";
+ document.getElementById("keteranganTabungan").value="";
+ updateTampilan();
+ toast("✅ Tabungan tersimpan");
+ if(data.target>0&&data.tabungan>=data.target){
+   setTimeout(()=>toast("🏆 Target tabungan tercapai!"),500);
+ }
 }
 
 async function ubahTarget(){
-  const input=prompt("Masukkan target tabungan.\nContoh: 10jt atau 10.000.000",data.target||"");
-  if(input===null)return;
-  const n=parseNominal(input);
-  if(!Number.isFinite(n)||n<=0){toast("❌ Target tidak valid");return;}
-  const old=data.target;
-  data.target=n;
-  try{
-    await simpanPengaturan();
-    updateTampilan();
-    toast("🎯 Target diubah menjadi "+rupiah(n));
-  }catch(e){
-    data.target=old;
-    toast("❌ Gagal menyimpan target: "+e.message);
-  }
+ const input=prompt("Masukkan target tabungan.\nContoh: 10jt atau 10.000.000",data.target||"");
+ if(input===null)return;
+
+ const n=parseNominal(input);
+ if(!Number.isFinite(n)||n<=0){
+   toast("❌ Target tidak valid");return;
+ }
+
+ const old=data.target;
+ data.target=n;
+
+ try{
+   await simpanPengaturan();
+   updateTampilan();
+   toast("🎯 Target disimpan: "+rupiah(n));
+ }catch(e){
+   data.target=old;
+   toast("❌ Gagal menyimpan target: "+e.message);
+ }
+}
+
+function isiTahun(){
+ const sel=document.getElementById("filterTahun");
+ const old=sel.value;
+ const tahun=[...new Set(data.riwayat.map(t=>new Date(t.timestamp).getFullYear()))].sort((a,b)=>b-a);
+
+ sel.innerHTML='<option value="all">Semua tahun</option>'+
+   tahun.map(y=>`<option value="${y}">${y}</option>`).join("");
+
+ if(tahun.map(String).includes(old))sel.value=old;
 }
 
 function renderHistory(){
-  const el=document.getElementById("history");
-  if(!data.riwayat.length){el.innerHTML='<div class="empty">Belum ada transaksi.</div>';return;}
-  el.innerHTML=data.riwayat.slice().reverse().map(t=>{
-    const isPlus=["masuk","tabungan_keluar"].includes(t.jenis);
-    const label={
-      masuk:"Pemasukan",
-      keluar:"Pengeluaran",
-      tabungan_masuk:"Tabungan Masuk",
-      tabungan_keluar:"Tabungan Keluar"
-    }[t.jenis]||t.jenis;
-    const waktu=new Date(t.timestamp).toLocaleString("id-ID");
-    return `<div class="history-item">
-      <div class="history-top">
-        <span>${escapeHTML(label)}</span>
-        <span class="${isPlus?"plus":"minus"}">${isPlus?"+":"-"}${rupiah(t.jumlah)}</span>
-      </div>
-      <div>${escapeHTML(t.keterangan)}</div>
-      <div class="muted">${waktu} • Saldo ${rupiah(t.saldoSetelah)}</div>
-      <button class="danger" onclick="hapusTransaksi('${t.id}')">Hapus</button>
-    </div>`;
-  }).join("");
-}
+ const el=document.getElementById("history");
+ if(!el)return;
 
-async function hapusTransaksi(id){
-  const i=data.riwayat.findIndex(t=>String(t.id)===String(id));
-  if(i<0)return;
-  const t=data.riwayat[i];
-  if(!confirm("Hapus transaksi ini? Saldo dan tabungan akan dikembalikan."))return;
+ const bulan=document.getElementById("filterBulan").value;
+ const tahun=document.getElementById("filterTahun").value;
+ const q=document.getElementById("search").value.trim().toLowerCase();
 
-  let saldoBaru=data.saldo;
-  let tabunganBaru=data.tabungan;
-  if(t.jenis==="masuk")saldoBaru-=t.jumlah;
-  if(t.jenis==="keluar")saldoBaru+=t.jumlah;
-  if(t.jenis==="tabungan_masuk"){saldoBaru+=t.jumlah;tabunganBaru-=t.jumlah;}
-  if(t.jenis==="tabungan_keluar"){saldoBaru-=t.jumlah;tabunganBaru+=t.jumlah;}
-  saldoBaru=Math.max(0,saldoBaru);
-  tabunganBaru=Math.max(0,tabunganBaru);
+ let arr=data.riwayat.filter(t=>{
+   const d=new Date(t.timestamp);
+   return (bulan==="all"||d.getMonth()===Number(bulan)) &&
+          (tahun==="all"||d.getFullYear()===Number(tahun)) &&
+          (!q||String(t.keterangan).toLowerCase().includes(q)||t.jenis.toLowerCase().includes(q));
+ });
 
-  const {error}=await supabaseClient.from("transaksi").delete().eq("id",t.id).eq("user_id",user.id);
-  if(error){toast("❌ Gagal menghapus: "+error.message);return;}
+ if(!arr.length){
+   el.innerHTML='<div class="empty">Tidak ada riwayat yang cocok.</div>';
+   return;
+ }
 
-  data.saldo=saldoBaru;
-  data.tabungan=tabunganBaru;
-  data.riwayat.splice(i,1);
+ arr.sort((a,b)=>new Date(b.timestamp)-new Date(a.timestamp));
 
-  try{await simpanPengaturan();}
-  catch(e){toast("⚠️ Transaksi dihapus, tetapi pengaturan gagal diperbarui: "+e.message);}
+ let html="",last="";
+ arr.forEach(t=>{
+   const d=new Date(t.timestamp);
+   const key=d.getFullYear()+"-"+d.getMonth();
 
-  updateTampilan();
-  toast("🗑️ Transaksi dihapus");
-}
+   if(key!==last){
+     html+=`<div class="month-title">${namaBulan[d.getMonth()]} ${d.getFullYear()}</div>`;
+     last=key;
+   }
 
-async function hapusSemua(){
-  if(!data.riwayat.length){toast("Tidak ada riwayat");return;}
-  if(!confirm("Hapus SEMUA riwayat dan reset saldo/tabungan?"))return;
+   const plus=["masuk","tabungan_keluar"].includes(t.jenis);
+   const label={
+     masuk:"Pemasukan",
+     keluar:"Pengeluaran",
+     tabungan_masuk:"Tabungan Masuk",
+     tabungan_keluar:"Tabungan Keluar"
+   }[t.jenis]||t.jenis;
 
-  const {error}=await supabaseClient.from("transaksi").delete().eq("user_id",user.id);
-  if(error){toast("❌ Gagal menghapus semua transaksi: "+error.message);return;}
+   const tanggal=d.toLocaleDateString("id-ID",{day:"2-digit",month:"long",year:"numeric"});
+   const jam=d.toLocaleTimeString("id-ID",{hour:"2-digit",minute:"2-digit"});
 
-  data={saldo:0,tabungan:0,target:data.target,riwayat:[]};
-  try{await simpanPengaturan();}
-  catch(e){toast("⚠️ Riwayat terhapus, tetapi pengaturan gagal diperbarui: "+e.message);}
-  updateTampilan();
-  toast("🗑️ Semua riwayat dihapus");
+   html+=`<div class="history-item">
+    <div class="history-top"><span>${escapeHTML(label)}</span><span class="${plus?"plus":"minus"}">${plus?"+":"-"}${rupiah(t.jumlah)}</span></div>
+    <div>${escapeHTML(t.keterangan)}</div>
+    <div class="muted">📅 ${tanggal} • ${jam} WIB</div>
+    <div class="muted">Saldo: ${rupiah(t.saldoSetelah)} • Tabungan: ${rupiah(t.tabunganSetelah)}</div>
+   </div>`;
+ });
+
+ el.innerHTML=html;
 }
 
 function loadChartJS(){
-  if(window.Chart){chartReady=true;buatGrafik();return;}
-  const s=document.createElement("script");
-  s.src="https://cdn.jsdelivr.net/npm/chart.js";
-  s.onload=()=>{chartReady=true;document.getElementById("chartStatus").textContent="";buatGrafik();};
-  s.onerror=()=>{document.getElementById("chartStatus").textContent="Grafik tidak tersedia tanpa koneksi internet.";};
-  document.head.appendChild(s);
+ if(window.Chart){
+   chartReady=true;
+   document.getElementById("chartStatus").textContent="";
+   buatGrafik();
+   return;
+ }
+
+ const s=document.createElement("script");
+ s.src="https://cdn.jsdelivr.net/npm/chart.js";
+ s.onload=()=>{
+   chartReady=true;
+   document.getElementById("chartStatus").textContent="";
+   buatGrafik();
+ };
+ s.onerror=()=>{
+   document.getElementById("chartStatus").textContent="Grafik membutuhkan koneksi internet.";
+ };
+ document.head.appendChild(s);
 }
 
 function buatGrafik(){
-  if(!window.Chart)return;
-  const canvas=document.getElementById("chart");
-  if(!canvas)return;
+ if(!window.Chart)return;
+ const canvas=document.getElementById("chart");
+ if(!canvas)return;
 
-  let saldoAwal=data.saldo;
-  data.riwayat.forEach(t=>{
-    if(t.jenis==="masuk")saldoAwal-=t.jumlah;
-    if(t.jenis==="keluar")saldoAwal+=t.jumlah;
-    if(t.jenis==="tabungan_masuk")saldoAwal+=t.jumlah;
-    if(t.jenis==="tabungan_keluar")saldoAwal-=t.jumlah;
-  });
+ let saldoAwal=data.saldo;
 
-  let saldo=saldoAwal;
-  const labels=["Awal"],values=[saldo];
-  data.riwayat.forEach((t,i)=>{
-    if(t.jenis==="masuk")saldo+=t.jumlah;
-    if(t.jenis==="keluar")saldo-=t.jumlah;
-    if(t.jenis==="tabungan_masuk")saldo-=t.jumlah;
-    if(t.jenis==="tabungan_keluar")saldo+=t.jumlah;
-    labels.push("#"+(i+1));values.push(saldo);
-  });
+ data.riwayat.forEach(t=>{
+   if(t.jenis==="masuk")saldoAwal-=t.jumlah;
+   if(t.jenis==="keluar")saldoAwal+=t.jumlah;
+   if(t.jenis==="tabungan_masuk")saldoAwal+=t.jumlah;
+   if(t.jenis==="tabungan_keluar")saldoAwal-=t.jumlah;
+ });
 
-  if(chart)chart.destroy();
-  chart=new Chart(canvas,{
-    type:"line",
-    data:{labels,datasets:[{label:"Saldo",data:values,tension:.3,fill:false,borderWidth:2,pointRadius:4}]},
-    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:true}},
-      scales:{y:{ticks:{callback:v=>rupiah(v)}}}}
-  });
+ let saldo=saldoAwal,labels=["Awal"],values=[saldo];
+
+ data.riwayat.forEach((t,i)=>{
+   if(t.jenis==="masuk")saldo+=t.jumlah;
+   if(t.jenis==="keluar")saldo-=t.jumlah;
+   if(t.jenis==="tabungan_masuk")saldo-=t.jumlah;
+   if(t.jenis==="tabungan_keluar")saldo+=t.jumlah;
+
+   labels.push("#"+(i+1));
+   values.push(saldo);
+ });
+
+ if(chart)chart.destroy();
+
+ chart=new Chart(canvas,{
+   type:"line",
+   data:{
+     labels,
+     datasets:[{
+       label:"Saldo",
+       data:values,
+       tension:.3,
+       fill:false,
+       borderWidth:2,
+       pointRadius:4
+     }]
+   },
+   options:{
+     responsive:true,
+     maintainAspectRatio:false,
+     plugins:{legend:{display:true}},
+     scales:{y:{ticks:{callback:v=>rupiah(v)}}}
+   }
+ });
 }
 
-async function mulai(){
-  const {data:res}=await supabaseClient.auth.getSession();
-  if(res.session){
-    user=res.session.user;
-    await mulaiSetelahLogin();
-  }
-  document.getElementById("loading").style.display="none";
-  setTimeout(loadChartJS,100);
+async function masuk(){
+ const email=document.getElementById("email").value.trim();
+ const password=document.getElementById("password").value;
+
+ if(!email||!password){
+   toast("❌ Email dan password wajib diisi");return;
+ }
+
+ toast("⏳ Sedang masuk...");
+
+ const {error}=await supabaseClient.auth.signInWithPassword({email,password});
+
+ if(error){
+   toast("❌ "+error.message);
+   return;
+ }
 }
 
-supabaseClient.auth.onAuthStateChange((event,session)=>{
-  if(session&&!user){
-    user=session.user;
-    mulaiSetelahLogin();
-  }
+async function daftar(){
+ const email=document.getElementById("email").value.trim();
+ const password=document.getElementById("password").value;
+
+ if(!email||!password){
+   toast("❌ Email dan password wajib diisi");return;
+ }
+
+ if(password.length<6){
+   toast("❌ Password minimal 6 karakter");return;
+ }
+
+ toast("⏳ Membuat akun...");
+
+ const {data:res,error}=await supabaseClient.auth.signUp({
+   email,password
+ });
+
+ if(error){
+   toast("❌ "+error.message);
+   return;
+ }
+
+ if(res.session){
+   toast("✅ Akun berhasil dibuat");
+ }else{
+   toast("📩 Cek email untuk konfirmasi akun, lalu masuk");
+ }
+}
+
+async function keluarAkun(){
+ await supabaseClient.auth.signOut();
+ user=null;
+ data={saldo:0,tabungan:0,target:0,riwayat:[]};
+ document.getElementById("app").classList.add("hidden");
+ document.getElementById("authScreen").classList.remove("hidden");
+ toast("👋 Kamu sudah keluar");
+}
+
+function tampilkanLoading(show,text){
+ const l=document.getElementById("loading");
+ if(text)document.getElementById("loadingText").textContent=text;
+ l.classList.toggle("hide",!show);
+}
+
+async function mulaiAplikasi(){
+ let selesai=false;
+
+ const failsafe=setTimeout(()=>{
+   if(selesai)return;
+   selesai=true;
+   tampilkanLoading(false);
+   document.getElementById("authScreen").classList.remove("hidden");
+   toast("ℹ️ Silakan masuk ke akunmu");
+ },5000);
+
+ try{
+   const {data:sessionData,error}=await supabaseClient.auth.getSession();
+   if(error)throw error;
+
+   if(sessionData.session){
+     user=sessionData.session.user;
+     tampilkanLoading(true,"Memuat data cloud...");
+     await loadData();
+
+     document.getElementById("authScreen").classList.add("hidden");
+     document.getElementById("app").classList.remove("hidden");
+     updateTampilan();
+     selesai=true;
+     clearTimeout(failsafe);
+     tampilkanLoading(false);
+     setTimeout(loadChartJS,80);
+   }else{
+     selesai=true;
+     clearTimeout(failsafe);
+     document.getElementById("authScreen").classList.remove("hidden");
+     tampilkanLoading(false);
+   }
+ }catch(e){
+   selesai=true;
+   clearTimeout(failsafe);
+   console.error(e);
+   document.getElementById("app").classList.add("hidden");
+   document.getElementById("authScreen").classList.remove("hidden");
+   tampilkanLoading(false);
+   toast("❌ Gagal memuat: "+e.message);
+ }
+}
+
+supabaseClient.auth.onAuthStateChange(async(event,session)=>{
+ if(event==="SIGNED_IN"&&session){
+   user=session.user;
+
+   try{
+     tampilkanLoading(true,"Memuat data cloud...");
+     await loadData();
+     document.getElementById("authScreen").classList.add("hidden");
+     document.getElementById("app").classList.remove("hidden");
+     updateTampilan();
+     tampilkanLoading(false);
+     setTimeout(loadChartJS,80);
+   }catch(e){
+     tampilkanLoading(false);
+     document.getElementById("authScreen").classList.remove("hidden");
+     toast("❌ Gagal memuat data: "+e.message);
+   }
+ }
+ if(event==="SIGNED_OUT"){
+   document.getElementById("app").classList.add("hidden");
+   document.getElementById("authScreen").classList.remove("hidden");
+   tampilkanLoading(false);
+ }
 });
 
-document.addEventListener("DOMContentLoaded",mulai);
+document.addEventListener("DOMContentLoaded",mulaiAplikasi);
 </script>
 </body>
 </html>
