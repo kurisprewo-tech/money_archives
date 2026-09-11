@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="id">
 <head>
@@ -96,6 +95,7 @@ input:focus,select:focus{border-color:var(--pink)}
 .day-nav button{border:0;border-radius:12px;background:#f0f0f0;padding:11px;font-size:20px;font-weight:800}
 .day-box{background:#fafafa;border-radius:14px;padding:12px;text-align:center}
 .day-name{font-size:18px;font-weight:800}
+
 .day-date{color:var(--muted);font-size:12px;margin-top:3px}
 .daily-total{font-size:30px;font-weight:800;color:var(--red);margin-top:8px}
 .daily-item{padding:12px 0;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;gap:10px}
@@ -117,6 +117,19 @@ input:focus,select:focus{border-color:var(--pink)}
     .monthly-total-item{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px 14px;border:1px solid #e5e7eb;border-radius:10px;background:#fff}
     .monthly-total-name{font-weight:600}
     .monthly-total-value{font-weight:700;white-space:nowrap}
+
+/* Fitur notifikasi */
+.notify-box{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:12px;padding:12px;background:#fafafa;border-radius:14px}
+.notify-left{display:flex;align-items:center;gap:10px}
+.notify-icon{font-size:24px}
+.notify-title{font-weight:800}
+.notify-desc{font-size:12px;color:var(--muted);margin-top:2px}
+.notify-controls{display:flex;gap:8px;align-items:center;margin-top:10px}
+.notify-controls input[type="time"]{flex:1;margin:0}
+.notify-controls button{white-space:nowrap}
+.target-actions{display:flex;gap:8px;align-items:center;margin-top:10px}
+.success-badge{display:inline-block;background:#eaf8ef;color:var(--green);border-radius:999px;padding:6px 9px;font-size:12px;font-weight:800;margin-top:9px}
+
 </style>
 </head>
 <body>
@@ -204,6 +217,10 @@ setTimeout(function(){
         </div>
         <div id="targetInfo" class="muted" style="margin-top:9px">Atur target tabunganmu.</div>
         <div class="progress"><div id="progressBar"></div></div>
+      <div class="target-actions">
+        <span id="targetAchievedBadge" class="success-badge hidden">🏆 Target tercapai</span>
+        <button id="deleteTargetBtn" class="secondary hidden" onclick="hapusTargetTercapai()">🗑️ Hapus Target</button>
+      </div>
       </div>
       <div class="card">
         <h2>🏦 Tabungan</h2>
@@ -219,15 +236,39 @@ setTimeout(function(){
         <input id="keteranganTabungan" placeholder="Contoh: Nabung mingguan...">
         <button class="primary" onclick="tambahTabungan()">Simpan Tabungan</button>
       </div>
+      <div class="card">
+        <h2>🔔 Notifikasi Pengingat</h2>
+        <div class="notify-box">
+          <div class="notify-left">
+            <div class="notify-icon">☁️</div>
+            <div>
+              <div class="notify-title">Pengingat harian</div>
+              <div class="notify-desc" id="notifyStatus">Belum diatur.</div>
+            </div>
+          </div>
+          <button class="secondary" id="notifyToggleBtn" onclick="toggleNotifikasi()">Aktifkan</button>
+        </div>
+        <div class="notify-controls">
+          <input id="waktuNotifikasi" type="time" value="20:00" aria-label="Jam notifikasi">
+          <button class="secondary" onclick="simpanJadwalNotifikasi()">Simpan Jam</button>
+        </div>
+        <div class="notice">
+          🔔 Notifikasi akan berisi rekapan saldo, tabungan, dan progres target pada jam yang kamu pilih. Pada browser tertentu, izin notifikasi perlu disetujui.
+        </div>
+      </div>
     </section>
 
     <section id="secC" class="section">
       <div class="card">
-        <h2>📈 Grafik Pergerakan Saldo</h2>
+        <h2>📈 Grafik Pengeluaran Harian</h2>
         <div id="chartStatus" class="chart-status">Menyiapkan grafik...</div>
         <div id="chartWrap"><canvas id="chart"></canvas></div>
 
-        <div class="monthly-list-title">📋 Ringkasan Keuangan Per Bulan</div>
+        <div class="monthly-chart-title">📊 Grafik Pengeluaran Per Bulan</div>
+        <div id="monthlyChartStatus" class="chart-status">Menyiapkan grafik bulanan...</div>
+        <div id="monthlyChartWrap"><canvas id="monthlyChart"></canvas></div>
+
+        <div class="monthly-list-title">📋 Total Pengeluaran Per Bulan</div>
         <div id="monthlyTotals" class="monthly-totals"></div>
       </div>
     </section>
@@ -299,8 +340,8 @@ const SUPABASE_URL = "https://bqjzwwdhscgwmecuaveo.supabase.co";
 const SUPABASE_KEY = "sb_publishable_HDrPq5sqxx8Pwk8j2p3kuw_U7j4fz3s";
 
 let supabaseClient=null;
-let data={saldo:0,tabungan:0,target:0,riwayat:[]};
-let chart=null,chartReady=false,currentUser=null;
+let data={saldo:0,tabungan:0,target:0,riwayat:[],notifikasiAktif:false,waktuNotifikasi:"20:00",notifikasiTerakhir:""};
+let chart=null,monthlyChart=null,chartReady=false,currentUser=null;
 
 const namaBulan=["Januari","Februari","Maret","April","Mei","Juni","Juli","Agustus","September","Oktober","November","Desember"];
 
@@ -394,23 +435,29 @@ function updateTampilan(){
     if(t.jenis==="keluar")keluar+=t.jumlah;
   });
 
-
-
-
   document.getElementById("totalMasuk").textContent=rupiah(masuk);
   document.getElementById("totalKeluar").textContent=rupiah(keluar);
+
+  const achieved = data.target>0 && data.tabungan>=data.target;
+  const deleteBtn=document.getElementById("deleteTargetBtn");
+  const achievedBadge=document.getElementById("targetAchievedBadge");
 
   if(data.target>0){
     const p=Math.min(100,data.tabungan/data.target*100);
     document.getElementById("targetText").textContent=rupiah(data.target);
     document.getElementById("targetInfo").textContent=rupiah(data.tabungan)+" / "+rupiah(data.target)+" • "+p.toFixed(1)+"%";
     document.getElementById("progressBar").style.width=p+"%";
+    if(deleteBtn)deleteBtn.classList.toggle("hidden",!achieved);
+    if(achievedBadge)achievedBadge.classList.toggle("hidden",!achieved);
   }else{
     document.getElementById("targetText").textContent="Belum ada target";
     document.getElementById("targetInfo").textContent="Atur target tabunganmu.";
     document.getElementById("progressBar").style.width="0%";
+    if(deleteBtn)deleteBtn.classList.add("hidden");
+    if(achievedBadge)achievedBadge.classList.add("hidden");
   }
 
+  renderNotifikasi();
   isiTahun();
   renderHistory();
   renderHarian();
@@ -558,6 +605,161 @@ async function ubahTarget(){
   }catch(e){
     data.target=old;
     toast("❌ Target gagal disimpan")
+  }
+}
+
+
+function loadNotifikasiLokal(){
+  try{
+    const raw=localStorage.getItem("money_archives_notifikasi_v1");
+    if(!raw)return;
+    const n=JSON.parse(raw);
+    if(typeof n?.aktif==="boolean")data.notifikasiAktif=n.aktif;
+    if(typeof n?.waktu==="string"&&/^\\d{2}:\\d{2}$/.test(n.waktu))data.waktuNotifikasi=n.waktu;
+    if(typeof n?.terakhir==="string")data.notifikasiTerakhir=n.terakhir;
+  }catch(e){}
+}
+
+function simpanNotifikasiLokal(){
+  try{
+    localStorage.setItem("money_archives_notifikasi_v1",JSON.stringify({
+      aktif:!!data.notifikasiAktif,
+      waktu:data.waktuNotifikasi||"20:00",
+      terakhir:data.notifikasiTerakhir||""
+    }));
+  }catch(e){}
+}
+
+function renderNotifikasi(){
+  const input=document.getElementById("waktuNotifikasi");
+  const status=document.getElementById("notifyStatus");
+  const btn=document.getElementById("notifyToggleBtn");
+  if(!input||!status||!btn)return;
+
+  input.value=data.waktuNotifikasi||"20:00";
+  btn.textContent=data.notifikasiAktif?"Matikan":"Aktifkan";
+  btn.style.background=data.notifikasiAktif?"#eaf8ef":"#f0f0f0";
+  btn.style.color=data.notifikasiAktif?"#159447":"#222";
+  status.textContent=data.notifikasiAktif
+    ? "Aktif • setiap hari pukul "+(data.waktuNotifikasi||"20:00")
+    : "Nonaktif • pilih jam lalu tekan Simpan Jam.";
+}
+
+async function simpanJadwalNotifikasi(){
+  const input=document.getElementById("waktuNotifikasi");
+  const waktu=input?.value;
+  if(!waktu){
+    toast("❌ Pilih jam notifikasi dulu");
+    return;
+  }
+
+  data.waktuNotifikasi=waktu;
+
+  try{
+    simpanNotifikasiLokal();
+    renderNotifikasi();
+    toast("✅ Jadwal notifikasi disimpan: "+waktu);
+
+    if("Notification" in window && Notification.permission==="default"){
+      await Notification.requestPermission();
+    }
+  }catch(e){
+    toast("❌ Jadwal gagal disimpan");
+  }
+}
+
+async function toggleNotifikasi(){
+  try{
+    if(!data.notifikasiAktif){
+      if(!("Notification" in window)){
+        toast("❌ Browser ini tidak mendukung notifikasi");
+        return;
+      }
+
+      if(Notification.permission!=="granted"){
+        const permission=await Notification.requestPermission();
+        if(permission!=="granted"){
+          toast("⚠️ Izin notifikasi belum diberikan");
+          return;
+        }
+      }
+
+      data.notifikasiAktif=true;
+      if(!data.waktuNotifikasi)data.waktuNotifikasi="20:00";
+      simpanNotifikasiLokal();
+      renderNotifikasi();
+      toast("🔔 Notifikasi diaktifkan");
+    }else{
+      data.notifikasiAktif=false;
+      simpanNotifikasiLokal();
+      renderNotifikasi();
+      toast("🔕 Notifikasi dimatikan");
+    }
+  }catch(e){
+    toast("❌ Pengaturan notifikasi gagal disimpan");
+  }
+}
+
+function cekNotifikasiTerjadwal(){
+  if(!data.notifikasiAktif)return;
+  const now=new Date();
+  const hh=String(now.getHours()).padStart(2,"0");
+  const mm=String(now.getMinutes()).padStart(2,"0");
+  const waktu=hh+":"+mm;
+  const tanggal=now.toISOString().slice(0,10);
+
+  if(waktu!==(data.waktuNotifikasi||"20:00"))return;
+  if(data.notifikasiTerakhir===tanggal+" "+waktu)return;
+
+  data.notifikasiTerakhir=tanggal+" "+waktu;
+
+  const judul="🔔 Rekapan Money Archives";
+  const targetInfo=data.target>0
+    ? "\n🎯 Target: "+rupiah(data.target)+" ("+Math.min(100,data.tabungan/data.target*100).toFixed(1)+"%)"
+    : "";
+  const statusTarget=(data.target>0 && data.tabungan>=data.target)
+    ? "\n🏆 Target tabungan tercapai!"
+    : "";
+
+  const pesan=
+    "💰 Saldo: "+rupiah(data.saldo)+
+    "\n🏦 Tabungan: "+rupiah(data.tabungan)+
+    targetInfo+
+    statusTarget;
+
+  if("Notification" in window && Notification.permission==="granted"){
+    try{
+      new Notification(judul,{body:pesan,icon:""});
+    }catch(e){}
+  }
+
+  toast(
+    "💰 Saldo: "+rupiah(data.saldo)+
+    " • 🏦 Tabungan: "+rupiah(data.tabungan)+
+    ((data.target>0 && data.tabungan>=data.target)?" • 🏆 Target tercapai!":"")
+  );
+  simpanNotifikasiLokal();
+}
+
+async function hapusTargetTercapai(){
+  if(!(data.target>0 && data.tabungan>=data.target)){
+    toast("ℹ️ Target baru bisa dihapus setelah tercapai");
+    return;
+  }
+
+  if(!confirm("Target tabungan sudah tercapai. Hapus target ini?"))return;
+
+  const old=data.target;
+  data.target=0;
+
+  try{
+    await simpanPengaturan();
+    updateTampilan();
+    toast("✅ Target yang tercapai sudah dihapus");
+  }catch(e){
+    data.target=old;
+    updateTampilan();
+    toast("❌ Target gagal dihapus");
   }
 }
 
@@ -771,135 +973,76 @@ function loadChartJS(){
 
 function buatGrafik(){
   if(!window.Chart)return;
-
   const canvas=document.getElementById("chart");
+  const monthlyCanvas=document.getElementById("monthlyChart");
   if(!canvas)return;
 
-  const transaksi=data.riwayat
-    .filter(t=>["masuk","keluar"].includes(t.jenis))
-    .sort((a,b)=>new Date(a.timestamp)-new Date(b.timestamp));
-
-  if(chart)chart.destroy();
-
-  if(!transaksi.length){
-    document.getElementById("chartStatus").textContent=
-      "Belum ada transaksi pemasukan atau pengeluaran untuk dibuat grafik.";
-    renderMonthlyTotals();
-    return
-  }
-
-  const labels=transaksi.map(t=>{
-    const d=new Date(t.timestamp);
-
-
-
-    return d.toLocaleDateString("id-ID",{day:"2-digit",month:"short"})+" "+
-      d.toLocaleTimeString("id-ID",{hour:"2-digit",minute:"2-digit"});
-  });
-
-  const values=transaksi.map(t=>Number(t.saldoSetelah)||0);
-
-  document.getElementById("chartStatus").textContent=
-    "Saldo naik saat ada pemasukan dan turun saat ada pengeluaran";
-
-  chart=new Chart(canvas,{
-    type:"line",
-    data:{
-      labels:labels,
-      datasets:[{
-        label:"Saldo",
-        data:values,
-        tension:.3,
-        fill:false,
-        borderWidth:3,
-        pointRadius:4,
-        pointHoverRadius:6
-      }]
-    },
-    options:{
-      responsive:true,
-      maintainAspectRatio:false,
-      plugins:{
-        legend:{display:true},
-        tooltip:{
-          callbacks:{
-            label:ctx=>"Saldo: "+rupiah(ctx.parsed.y)
-          }
-        }
-      },
-      scales:{
-        y:{
-          ticks:{callback:v=>rupiah(v)}
-        }
-      }
-    }
-  });
-
-  renderMonthlyTotals();
-}
-
-function renderMonthlyTotals(){
-  const el=document.getElementById("monthlyTotals");
-  if(!el)return;
-
-  const bulanan={};
+  const harian={},bulanan={};
 
   data.riwayat.forEach(t=>{
-    if(!["masuk","keluar"].includes(t.jenis))return;
+    if(t.jenis!=="keluar")return;
     const d=new Date(t.timestamp);
-    const key=d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0");
+    const jumlah=Number(t.jumlah)||0;
 
-    if(!bulanan[key]){
-      bulanan[key]={
-        tahun:d.getFullYear(),
-        bulan:d.getMonth(),
-        masuk:0,
-        keluar:0,
-        saldo:Number(t.saldoSetelah)||0,
-        terakhir:d
-      };
-    }
+    const dailyKey=d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
+    if(!harian[dailyKey])harian[dailyKey]={tanggal:new Date(d.getFullYear(),d.getMonth(),d.getDate()),total:0};
+    harian[dailyKey].total+=jumlah;
 
-    if(t.jenis==="masuk")bulanan[key].masuk+=Number(t.jumlah)||0;
-    if(t.jenis==="keluar")bulanan[key].keluar+=Number(t.jumlah)||0;
-
-    if(d>=bulanan[key].terakhir){
-      bulanan[key].saldo=Number(t.saldoSetelah)||0;
-      bulanan[key].terakhir=d;
-    }
+    const monthKey=d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0");
+    if(!bulanan[monthKey])bulanan[monthKey]={tanggal:new Date(d.getFullYear(),d.getMonth(),1),total:0};
+    bulanan[monthKey].total+=jumlah;
   });
 
-  const daftar=Object.values(bulanan).sort((a,b)=>{
-    if(a.tahun!==b.tahun)return b.tahun-a.tahun;
-    return b.bulan-a.bulan;
+  const daftar=Object.values(harian).sort((a,b)=>a.tanggal-b.tanggal);
+  const namaHariSingkat=["Min","Sen","Sel","Rab","Kam","Jum","Sab"];
+  const labels=daftar.map(item=>{
+    const d=item.tanggal;
+    return namaHariSingkat[d.getDay()]+" "+d.getDate()+" "+d.toLocaleDateString("id-ID",{month:"short"});
   });
+  const values=daftar.map(item=>item.total);
 
+  if(chart)chart.destroy();
   if(!daftar.length){
-    el.innerHTML='<div class="empty">Belum ada ringkasan bulanan.</div>';
-    return
+    document.getElementById("chartStatus").textContent="Belum ada data pengeluaran untuk dibuat grafik.";
+  }else{
+    document.getElementById("chartStatus").textContent="Total pengeluaran per hari";
+    chart=new Chart(canvas,{
+      type:"line",
+      data:{labels:labels,datasets:[{label:"Pengeluaran Harian",data:values,tension:.3,fill:false,borderWidth:2,pointRadius:4}]},
+      options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:true}},scales:{y:{ticks:{callback:v=>rupiah(v)}}}}
+    })
   }
 
-  el.innerHTML=daftar.map(item=>`
-    <div class="monthly-total-item">
-      <div class="monthly-total-head">
-        <span class="monthly-total-name">${namaBulan[item.bulan]} ${item.tahun}</span>
-        <span class="monthly-total-value">Saldo akhir: ${rupiah(item.saldo)}</span>
-      </div>
-      <div class="monthly-total-grid">
-        <div class="monthly-total-box">
-          <div class="monthly-total-label">Pemasukan</div>
-          <div class="monthly-total-value plus">+${rupiah(item.masuk)}</div>
-        </div>
-        <div class="monthly-total-box">
-          <div class="monthly-total-label">Pengeluaran</div>
-          <div class="monthly-total-value minus">-${rupiah(item.keluar)}</div>
-        </div>
-        <div class="monthly-total-box">
-          <div class="monthly-total-label">Selisih</div>
-          <div class="monthly-total-value">${rupiah(item.masuk-item.keluar)}</div>
-        </div>
-      </div>
-    </div>`).join("");
+  const daftarBulanan=Object.values(bulanan).sort((a,b)=>a.tanggal-b.tanggal);
+  const labelsBulanan=daftarBulanan.map(item=>item.tanggal.toLocaleDateString("id-ID",{month:"short",year:"numeric"}));
+  const valuesBulanan=daftarBulanan.map(item=>item.total);
+
+  if(monthlyChart)monthlyChart.destroy();
+  const monthlyStatus=document.getElementById("monthlyChartStatus");
+  if(monthlyCanvas&&monthlyStatus){
+    if(!daftarBulanan.length){
+      monthlyStatus.textContent="Belum ada data pengeluaran bulanan.";
+    }else{
+      monthlyStatus.textContent="Total pengeluaran yang dikelompokkan per bulan";
+      monthlyChart=new Chart(monthlyCanvas,{
+        type:"bar",
+        data:{labels:labelsBulanan,datasets:[{label:"Pengeluaran Bulanan",data:valuesBulanan,borderWidth:1}]},
+        options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:true}},scales:{y:{ticks:{callback:v=>rupiah(v)}}}}
+      })
+    }
+  }
+
+  const monthlyTotals=document.getElementById("monthlyTotals");
+  if(monthlyTotals){
+    if(!daftarBulanan.length){
+      monthlyTotals.innerHTML='<div class="chart-status">Belum ada data pengeluaran.</div>';
+    }else{
+      monthlyTotals.innerHTML=daftarBulanan.slice().reverse().map(item=>{
+        const namaBulan=item.tanggal.toLocaleDateString("id-ID",{month:"long",year:"numeric"});
+        return `<div class="monthly-total-item"><span class="monthly-total-name">${namaBulan}</span><span class="monthly-total-value">${rupiah(item.total)}</span></div>`;
+      }).join("");
+    }
+  }
 }
 
 /* =========================
@@ -932,6 +1075,9 @@ async function loadCloud(){
     saldo:Number(settings?.saldo)||0,
     tabungan:Number(settings?.tabungan)||0,
     target:Number(settings?.target)||0,
+    notifikasiAktif:!!settings?.notifikasi_aktif,
+    waktuNotifikasi:settings?.waktu_notifikasi||"20:00",
+    notifikasiTerakhir:settings?.notifikasi_terakhir||"",
     riwayat:(txs||[]).map(t=>({
       id:t.id,
       jenis:t.jenis,
@@ -1108,7 +1254,7 @@ async function daftar(){
 
 async function logout(){
   await supabaseClient.auth.signOut();
-  data={saldo:0,tabungan:0,target:0,riwayat:[]};
+  data={saldo:0,tabungan:0,target:0,riwayat:[],notifikasiAktif:false,waktuNotifikasi:"20:00",notifikasiTerakhir:""};
   showAuth();
   toast("Anda sudah keluar")
 }
@@ -1121,6 +1267,7 @@ async function startUser(user){
   document.getElementById("greeting").textContent=waktuSapaan();
   document.getElementById("username").textContent=nama;
 
+  loadNotifikasiLokal();
   showApp();
 
   try{
@@ -1233,6 +1380,7 @@ document.addEventListener("DOMContentLoaded",()=>{
 
   loadChartJS();
   mulai();
+  setInterval(cekNotifikasiTerjadwal,15000);
 });
 </script>
 </body>
