@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="id">
 <head>
@@ -1233,6 +1234,318 @@ document.addEventListener("DOMContentLoaded",()=>{
   loadChartJS();
   mulai();
 });
+</script>
+</body>
+</html>
+
+
+
+
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#ff0050">
+<title>LeleKu - Manajemen Ternak Lele</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#f5f5f5;font-family:Arial,Helvetica,sans-serif;color:#222}
+button,input,select{font:inherit}
+.app{max-width:520px;margin:auto;min-height:100vh;background:#f5f5f5;padding-bottom:90px}
+.header{background:#ff0050;color:white;padding:18px 14px 22px;border-radius:0 0 24px 24px;box-shadow:0 3px 12px #0002}
+.top{display:flex;align-items:center;justify-content:space-between}
+.logo{width:44px;height:44px;border-radius:50%;background:white;display:flex;align-items:center;justify-content:center;font-size:25px}
+.title{font-size:21px;font-weight:700}
+.sub{font-size:11px;opacity:.9;margin-top:3px}
+.cloud{margin-top:15px;background:#e90049;border-radius:18px;padding:8px 12px;font-size:11px}
+.content{padding:12px}
+.card{background:#fff;border-radius:16px;padding:14px;margin-bottom:10px;box-shadow:0 2px 8px #0000000b}
+.balance small{color:#777}.balance h1{margin:4px 0 12px;font-size:25px}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.stat{background:#fafafa;border-radius:12px;padding:10px}
+.stat small{display:block;color:#777;font-size:10px}.green{color:#009b65}.red{color:#e53935}
+.menu{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.menu button{border:1px solid #eee;background:#fff;border-radius:14px;text-align:left;padding:13px;min-height:75px;box-shadow:0 2px 7px #00000009}
+.menu button.active{border:2px solid #ff0050}
+.icon{font-size:22px;display:block;margin-bottom:4px}.menu b{font-size:13px}.menu small{display:block;color:#777;font-size:10px;margin-top:3px}
+.section-title{display:flex;justify-content:space-between;align-items:center;margin:5px 2px 9px}
+.section-title h3{font-size:14px;margin:0}.section-title span{font-size:11px;color:#ff0050}
+.form-row{margin-bottom:10px}.form-row label{font-size:11px;color:#555;display:block;margin:0 0 5px}
+.form-row input,.form-row select{width:100%;border:1px solid #ddd;border-radius:11px;padding:11px;background:#fff;outline:none}
+.form-row input:focus,.form-row select:focus{border-color:#ff0050}
+.primary{width:100%;border:0;background:#ff0050;color:white;border-radius:11px;padding:11px;font-weight:bold}
+.list-item{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid #eee}
+.list-item:last-child{border-bottom:0}.item-left{display:flex;gap:10px;align-items:center}
+.circle{width:38px;height:38px;border-radius:12px;background:#fff0f5;display:flex;align-items:center;justify-content:center;font-size:20px}
+.item-title{font-size:12px;font-weight:bold}.item-sub{font-size:10px;color:#777;margin-top:3px}
+.amount{font-size:12px;font-weight:bold}.empty{text-align:center;color:#999;font-size:12px;padding:18px}
+.bottom{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:min(520px,100%);height:72px;background:#fff;border-top:1px solid #eee;display:grid;grid-template-columns:repeat(4,1fr);z-index:10}
+.bottom button{border:0;background:white;color:#777;font-size:10px}.bottom button.active{color:#ff0050;font-weight:bold}.bottom .bi{font-size:20px;display:block;margin-bottom:4px}
+.badge{display:inline-block;background:#e9fff6;color:#00895b;border-radius:20px;padding:5px 8px;font-size:9px}
+.hidden{display:none}
+.chart{height:155px;position:relative;padding:12px 5px 5px}
+svg{width:100%;height:100%}.gridline{stroke:#eee;stroke-width:1}.axis{fill:#999;font-size:8px}
+.toast{position:fixed;left:50%;bottom:85px;transform:translateX(-50%);background:#222;color:white;padding:10px 15px;border-radius:20px;font-size:11px;display:none;z-index:20}
+</style>
+</head>
+<body>
+<div class="app">
+<header class="header">
+  <div class="top">
+    <div>
+      <div class="title">🐟 LeleKu</div>
+      <div class="sub">Manajemen ternak & penjualan lele</div>
+    </div>
+    <div class="logo">🐟</div>
+  </div>
+  <div class="cloud">☁️ Data tersimpan di perangkat • Siap dikembangkan ke cloud</div>
+</header>
+
+<main class="content">
+  <section id="homePage">
+    <div class="card balance">
+      <small>Total keuntungan sementara</small>
+      <h1 id="profit">Rp 0</h1>
+      <div class="stats">
+        <div class="stat"><small>Penjualan lele</small><b class="green" id="sales">Rp 0</b></div>
+        <div class="stat"><small>Pemasukan lain</small><b class="green" id="income">Rp 0</b></div>
+        <div class="stat"><small>Total biaya</small><b class="red" id="expenses">Rp 0</b></div>
+        <div class="stat"><small>Saldo kas</small><b id="cashBalance">Rp 0</b></div>
+      </div>
+    </div>
+
+    <div class="menu">
+      <button class="active" onclick="showSection('kolam')"><span class="icon">🏊</span><b>Kolam</b><small>Data kolam & ikan</small></button>
+      <button onclick="showSection('biaya')"><span class="icon">🌾</span><b>Biaya</b><small>Pakan & pengeluaran</small></button>
+      <button onclick="showSection('penjualan')"><span class="icon">💰</span><b>Penjualan</b><small>Catatan hasil panen</small></button>
+      <button onclick="showSection('pemasukan')"><span class="icon">💵</span><b>Pemasukan</b><small>Uang masuk lainnya</small></button>
+      <button onclick="showSection('laporan')"><span class="icon">📊</span><b>Laporan</b><small>Keuntungan usaha</small></button>
+    </div>
+
+    <div class="card" style="margin-top:10px">
+      <div class="section-title"><h3>📈 Pergerakan usaha</h3><span>6 bulan</span></div>
+      <div class="chart">
+        <svg viewBox="0 0 400 140" preserveAspectRatio="none">
+          <line x1="10" y1="20" x2="395" y2="20" class="gridline"/>
+          <line x1="10" y1="55" x2="395" y2="55" class="gridline"/>
+          <line x1="10" y1="90" x2="395" y2="90" class="gridline"/>
+          <line x1="10" y1="125" x2="395" y2="125" class="gridline"/>
+          <polyline id="chartLine" fill="none" stroke="#ff0050" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"
+            points="10,105 85,80 160,95 235,55 310,72 390,35"/>
+          <circle cx="10" cy="105" r="4" fill="#ff0050"/><circle cx="85" cy="80" r="4" fill="#ff0050"/>
+          <circle cx="160" cy="95" r="4" fill="#ff0050"/><circle cx="235" cy="55" r="4" fill="#ff0050"/>
+          <circle cx="310" cy="72" r="4" fill="#ff0050"/><circle cx="390" cy="35" r="4" fill="#ff0050"/>
+          <text x="5" y="138" class="axis">Apr</text><text x="80" y="138" class="axis">Mei</text>
+          <text x="155" y="138" class="axis">Jun</text><text x="230" y="138" class="axis">Jul</text>
+          <text x="305" y="138" class="axis">Agt</text><text x="382" y="138" class="axis">Sep</text>
+        </svg>
+      </div>
+    </div>
+
+    <div class="section-title"><h3>Aktivitas terbaru</h3><span onclick="showSection('riwayat')">Lihat semua</span></div>
+    <div class="card" id="recentList"><div class="empty">Belum ada aktivitas.</div></div>
+  </section>
+
+  <section id="kolamPage" class="hidden">
+    <div class="section-title"><h3>🏊 Kolam & Siklus Ternak</h3></div>
+    <div class="card">
+      <div class="form-row"><label>Nama kolam</label><input id="pondName" placeholder="Contoh: Kolam 1"></div>
+      <div class="form-row"><label>Jumlah bibit (ekor)</label><input id="seedCount" type="number" placeholder="2000"></div>
+      <div class="form-row"><label>Tanggal tebar</label><input id="stockDate" type="date"></div>
+      <button class="primary" onclick="addPond()">+ Simpan Kolam</button>
+    </div>
+    <div id="pondList"></div>
+  </section>
+
+  <section id="biayaPage" class="hidden">
+    <div class="section-title"><h3>🌾 Catat Biaya</h3></div>
+    <div class="card">
+      <div class="form-row"><label>Kategori</label>
+        <select id="costType"><option>Bibit</option><option>Pakan</option><option>Obat / Vitamin</option><option>Perawatan Kolam</option><option>Peralatan</option><option>Lain-lain</option></select>
+      </div>
+      <div class="form-row"><label>Nominal</label><input id="costAmount" type="number" placeholder="50000"></div>
+      <div class="form-row"><label>Keterangan</label><input id="costNote" placeholder="Contoh: Pakan 2 kg"></div>
+      <button class="primary" onclick="addCost()">+ Simpan Biaya</button>
+    </div>
+    <div id="costList"></div>
+  </section>
+
+  <section id="penjualanPage" class="hidden">
+    <div class="section-title"><h3>💰 Penjualan / Panen</h3></div>
+    <div class="card">
+      <div class="form-row"><label>Tanggal</label><input id="saleDate" type="date"></div>
+      <div class="form-row"><label>Berat ikan (kg)</label><input id="saleWeight" type="number" step="0.1" placeholder="85"></div>
+      <div class="form-row"><label>Harga per kg</label><input id="salePrice" type="number" placeholder="22000"></div>
+      <div class="form-row"><label>Nama pembeli</label><input id="buyer" placeholder="Contoh: Pak Budi"></div>
+      <button class="primary" onclick="addSale()">+ Simpan Penjualan</button>
+    </div>
+    <div id="saleList"></div>
+  </section>
+
+
+  <section id="pemasukanPage" class="hidden">
+    <div class="section-title"><h3>💵 Pemasukan</h3></div>
+    <div class="card">
+      <div class="form-row"><label>Tanggal</label><input id="incomeDate" type="date"></div>
+      <div class="form-row"><label>Kategori</label>
+        <select id="incomeType">
+          <option>Modal Tambahan</option>
+          <option>Pinjaman</option>
+          <option>Pendapatan Lain</option>
+          <option>Pengembalian Uang</option>
+          <option>Lain-lain</option>
+        </select>
+      </div>
+      <div class="form-row"><label>Nominal</label><input id="incomeAmount" type="number" placeholder="500000"></div>
+      <div class="form-row"><label>Keterangan</label><input id="incomeNote" placeholder="Contoh: Tambahan modal"></div>
+      <button class="primary" onclick="addIncome()">+ Simpan Pemasukan</button>
+    </div>
+    <div id="incomeList"></div>
+  </section>
+
+  <section id="laporanPage" class="hidden">
+    <div class="section-title"><h3>📊 Laporan Usaha</h3></div>
+    <div class="card">
+      <div class="stats">
+        <div class="stat"><small>Total biaya</small><b class="red" id="reportExpense">Rp 0</b></div>
+        <div class="stat"><small>Total penjualan</small><b class="green" id="reportSales">Rp 0</b></div>
+        <div class="stat"><small>Keuntungan</small><b class="green" id="reportProfit">Rp 0</b></div>
+        <div class="stat"><small>Kolam aktif</small><b id="reportPonds">0</b></div>
+      </div>
+    </div>
+    <div class="card"><div class="section-title"><h3>💡 Ringkasan</h3></div><div id="summary" class="empty">Belum ada data.</div></div>
+  </section>
+
+  <section id="riwayatPage" class="hidden">
+    <div class="section-title"><h3>📜 Riwayat</h3></div>
+    <div class="card" id="historyList"><div class="empty">Belum ada riwayat.</div></div>
+  </section>
+</main>
+
+<nav class="bottom">
+  <button class="active" onclick="goHome(this)"><span class="bi">🏠</span>Beranda</button>
+  <button onclick="navTo('kolam',this)"><span class="bi">🏊</span>Kolam</button>
+  <button onclick="navTo('biaya',this)"><span class="bi">🌾</span>Biaya</button>
+  <button onclick="navTo('penjualan',this)"><span class="bi">💰</span>Jual</button>
+</nav>
+<div id="toast" class="toast"></div>
+
+<script>
+const state = JSON.parse(localStorage.getItem('lelekuData') || '{"ponds":[],"costs":[],"sales":[],"incomes":[]}');
+if(!state.incomes) state.incomes=[];
+
+function save(){localStorage.setItem('lelekuData',JSON.stringify(state));render();}
+function rupiah(n){return 'Rp '+Number(n||0).toLocaleString('id-ID');}
+function today(el){if(!el.value) el.value=new Date().toISOString().slice(0,10)}
+today(document.getElementById('stockDate')); today(document.getElementById('saleDate')); today(document.getElementById('incomeDate'));
+
+function totals(){
+  const expense=state.costs.reduce((a,b)=>a+Number(b.amount),0);
+  const sales=state.sales.reduce((a,b)=>a+Number(b.total),0);
+  const income=state.incomes.reduce((a,b)=>a+Number(b.amount),0);
+  return {expense,sales,income,profit:sales-expense,saldo:income+sales-expense};
+}
+function render(){
+  const t=totals();
+  document.getElementById('profit').textContent=rupiah(t.profit);
+  document.getElementById('sales').textContent=rupiah(t.sales);
+  document.getElementById('expenses').textContent=rupiah(t.expense);
+  document.getElementById('income').textContent=rupiah(t.income);
+  document.getElementById('cashBalance').textContent=rupiah(t.saldo);
+  document.getElementById('reportExpense').textContent=rupiah(t.expense);
+  document.getElementById('reportSales').textContent=rupiah(t.sales);
+  document.getElementById('reportProfit').textContent=rupiah(t.profit);
+  document.getElementById('reportPonds').textContent=state.ponds.length;
+  renderPonds(); renderCosts(); renderSales(); renderIncomes(); renderHistory(); renderRecent();
+  document.getElementById('summary').innerHTML=state.sales.length||state.costs.length||state.incomes.length
+    ? `Dari data yang dicatat, keuntungan sementara usaha adalah <b>${rupiah(t.profit)}</b>.`
+    : 'Belum ada data.';
+}
+function showSection(name){
+  document.querySelectorAll('main section').forEach(x=>x.classList.add('hidden'));
+  document.getElementById(name+'Page').classList.remove('hidden');
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+function navTo(name,btn){document.querySelectorAll('.bottom button').forEach(x=>x.classList.remove('active'));btn.classList.add('active');showSection(name)}
+function goHome(btn){document.querySelectorAll('.bottom button').forEach(x=>x.classList.remove('active'));btn.classList.add('active');showSection('home')}
+function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.style.display='block';setTimeout(()=>t.style.display='none',1800)}
+
+function addPond(){
+  const name=pondName.value.trim(), count=Number(seedCount.value), date=stockDate.value;
+  if(!name||!count||!date){toast('Lengkapi data kolam');return}
+  state.ponds.unshift({id:Date.now(),name,count,date});
+  pondName.value='';seedCount.value='';
+  save();toast('Kolam berhasil ditambahkan');
+}
+function addCost(){
+  const amount=Number(costAmount.value);
+  if(!amount){toast('Masukkan nominal biaya');return}
+  state.costs.unshift({id:Date.now(),type:costType.value,amount,note:costNote.value||'-',date:new Date().toISOString().slice(0,10)});
+  costAmount.value='';costNote.value='';save();toast('Biaya berhasil disimpan');
+}
+function addSale(){
+  const weight=Number(saleWeight.value), price=Number(salePrice.value);
+  if(!weight||!price){toast('Lengkapi berat dan harga');return}
+  state.sales.unshift({id:Date.now(),date:saleDate.value,weight,price,total:weight*price,buyer:buyer.value||'-'});
+  saleWeight.value='';salePrice.value='';buyer.value='';save();toast('Penjualan berhasil disimpan');
+}
+function addIncome(){
+  const amount=Number(incomeAmount.value);
+  if(!amount){toast('Masukkan nominal pemasukan');return}
+  state.incomes.unshift({
+    id:Date.now(),
+    date:incomeDate.value || new Date().toISOString().slice(0,10),
+    type:incomeType.value,
+    amount,
+    note:incomeNote.value||'-'
+  });
+  incomeAmount.value='';incomeNote.value='';save();toast('Pemasukan berhasil disimpan');
+}
+function renderIncomes(){
+  const el=document.getElementById('incomeList');
+  if(!state.incomes.length){el.innerHTML='<div class="card empty">Belum ada pemasukan.</div>';return}
+  el.innerHTML='<div class="card">'+state.incomes.slice(0,15).map(i=>`<div class="list-item"><div class="item-left"><div class="circle">💵</div><div><div class="item-title">${esc(i.type)}</div><div class="item-sub">${esc(i.note)} • ${i.date}</div></div></div><span class="amount green">+${rupiah(i.amount)}</span></div>`).join('')+'</div>';
+}
+
+function renderPonds(){
+  const el=document.getElementById('pondList');
+  if(!state.ponds.length){el.innerHTML='<div class="card empty">Belum ada kolam.</div>';return}
+  el.innerHTML=state.ponds.map(p=>{
+    const days=Math.max(0,Math.floor((new Date()-new Date(p.date))/86400000));
+    return `<div class="card"><div class="list-item"><div class="item-left"><div class="circle">🐟</div><div><div class="item-title">${esc(p.name)}</div><div class="item-sub">${p.count.toLocaleString('id-ID')} ekor • Tebar ${p.date} • ${days} hari</div></div></div><span class="badge">AKTIF</span></div></div>`
+  }).join('');
+}
+function renderCosts(){
+  const el=document.getElementById('costList');
+  if(!state.costs.length){el.innerHTML='<div class="card empty">Belum ada biaya.</div>';return}
+  el.innerHTML='<div class="card">'+state.costs.slice(0,10).map(c=>`<div class="list-item"><div class="item-left"><div class="circle">🌾</div><div><div class="item-title">${esc(c.type)}</div><div class="item-sub">${esc(c.note)} • ${c.date}</div></div></div><span class="amount red">-${rupiah(c.amount)}</span></div>`).join('')+'</div>';
+}
+function renderSales(){
+  const el=document.getElementById('saleList');
+  if(!state.sales.length){el.innerHTML='<div class="card empty">Belum ada penjualan.</div>';return}
+  el.innerHTML='<div class="card">'+state.sales.slice(0,10).map(s=>`<div class="list-item"><div class="item-left"><div class="circle">💰</div><div><div class="item-title">${s.weight} kg • ${rupiah(s.price)}/kg</div><div class="item-sub">${esc(s.buyer)} • ${s.date}</div></div></div><span class="amount green">+${rupiah(s.total)}</span></div>`).join('')+'</div>';
+}
+function renderHistory(){
+  const arr=[
+    ...state.costs.map(c=>({date:c.date,title:c.type,note:c.note,amount:-c.amount,icon:'🌾'})),
+    ...state.sales.map(s=>({date:s.date,title:'Penjualan lele',note:s.weight+' kg • '+s.buyer,amount:s.total,icon:'💰'})),
+    ...state.incomes.map(i=>({date:i.date,title:i.type,note:i.note,amount:i.amount,icon:'💵'}))
+  ].sort((a,b)=>b.date.localeCompare(a.date));
+  const el=document.getElementById('historyList');
+  el.innerHTML=arr.length?arr.map(x=>`<div class="list-item"><div class="item-left"><div class="circle">${x.icon}</div><div><div class="item-title">${esc(x.title)}</div><div class="item-sub">${esc(x.note)} • ${x.date}</div></div></div><span class="amount ${x.amount>=0?'green':'red'}">${x.amount>=0?'+':'-'}${rupiah(Math.abs(x.amount))}</span></div>`).join(''):'<div class="empty">Belum ada riwayat.</div>';
+}
+function renderRecent(){
+  const el=document.getElementById('recentList');
+  const arr=[
+    ...state.costs.map(c=>({date:c.date,title:c.type,note:c.note,amount:-c.amount,icon:'🌾'})),
+    ...state.sales.map(s=>({date:s.date,title:'Penjualan lele',note:s.weight+' kg',amount:s.total,icon:'💰'})),
+    ...state.incomes.map(i=>({date:i.date,title:i.type,note:i.note,amount:i.amount,icon:'💵'}))
+  ].sort((a,b)=>b.date.localeCompare(a.date)).slice(0,4);
+  el.innerHTML=arr.length?arr.map(x=>`<div class="list-item"><div class="item-left"><div class="circle">${x.icon}</div><div><div class="item-title">${esc(x.title)}</div><div class="item-sub">${esc(x.note)}</div></div></div><span class="amount ${x.amount>=0?'green':'red'}">${x.amount>=0?'+':'-'}${rupiah(Math.abs(x.amount))}</span></div>`).join(''):'<div class="empty">Belum ada aktivitas.</div>';
+}
+function esc(s){return String(s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]))}
+render();
 </script>
 </body>
 </html>
