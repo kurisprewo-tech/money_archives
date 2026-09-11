@@ -1,617 +1,232 @@
-<!DOCTYPE html>
-<html lang="id">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<meta name="theme-color" content="#f5004f">
-<title>Money Archives</title>
+<!-- MONEY ARCHIVES — BAGIAN 1/2
+Tempel BAGIAN 1 lalu langsung sambung BAGIAN 2 tanpa tambahan apa pun.
+Bagian ini berisi perubahan CSS + menu E + section E.
+-->
+
+<!-- PERUBAHAN CSS: tambahkan sebelum </style> -->
 <style>
-*{box-sizing:border-box}
-:root{
-  --pink:#f5004f;--pink2:#e90046;--bg:#f6f6f6;--card:#fff;
-  --text:#222;--muted:#777;--line:#eee;--green:#159447;--red:#e53935;
-}
-html,body{margin:0;padding:0;background:var(--bg);color:var(--text);font-family:Arial,sans-serif}
-body{min-height:100vh}
-button,input,select{font:inherit}
-button{cursor:pointer}
-.app{max-width:720px;margin:auto;padding-bottom:88px}
-.top{
-  background:linear-gradient(135deg,var(--pink),var(--pink2));
-  color:#fff;padding:28px 20px 26px;border-radius:0 0 24px 24px;
-  box-shadow:0 5px 18px rgba(0,0,0,.12)
-}
-.top-row{display:flex;align-items:center;justify-content:space-between;gap:12px}
-.greeting{font-size:15px;opacity:.92}.username{font-size:25px;font-weight:800;margin-top:3px}
-.logo{width:52px;height:52px;border-radius:50%;background:#fff;display:grid;place-items:center;font-size:29px}
-.cloud{margin-top:17px;background:rgba(255,255,255,.14);border-radius:15px;padding:10px 12px;font-size:12px}
-.content{padding:14px 14px 0}
-.card{background:var(--card);border-radius:19px;margin-bottom:14px;padding:17px;box-shadow:0 3px 12px rgba(0,0,0,.06)}
-.balance-card{margin-top:-4px}
-.label{font-size:13px;color:var(--muted)}
-.balance{font-size:31px;font-weight:800;margin:5px 0 15px;word-break:break-word}
-.stats{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.stat{background:#fafafa;border-radius:14px;padding:12px}
-.stat b{display:block;margin-top:5px;font-size:17px}
-.income{color:var(--green)}.expense{color:var(--red)}
-.menu-grid{display:grid;grid-template-columns:1fr 1fr;gap:11px}
-.menu-btn{
-  border:1px solid #eee;background:#fff;border-radius:16px;padding:15px 10px;
-  text-align:left;box-shadow:0 2px 7px rgba(0,0,0,.04);color:#222
-}
-.menu-btn.active{border:2px solid var(--pink);padding:14px 9px}
-.menu-icon{font-size:27px}.menu-title{font-weight:800;margin-top:8px}.menu-desc{font-size:12px;color:var(--muted);margin-top:3px}
-.section{display:none}.section.active{display:block}
-h2{font-size:20px;margin:0 0 15px}
-label{display:block;font-weight:700;font-size:14px;margin:12px 0 6px}
-input,select{
-  width:100%;padding:12px 13px;border:1px solid #ddd;border-radius:12px;
-  background:#fff;outline:none
-}
-input:focus,select:focus{border-color:var(--pink)}
-.primary{width:100%;border:0;border-radius:12px;background:var(--pink);color:#fff;padding:13px;font-weight:800;margin-top:13px}
-.secondary{border:0;border-radius:12px;background:#f0f0f0;color:#222;padding:10px 13px;font-weight:700}
-.target-row{display:flex;justify-content:space-between;align-items:center;gap:10px}
-.progress{height:13px;background:#eee;border-radius:99px;overflow:hidden;margin-top:13px}
-.progress>div{height:100%;width:0;background:var(--pink);transition:.3s}
-.big-stat{font-size:25px;font-weight:800;margin-top:5px}
-.search-row{display:grid;grid-template-columns:1fr 1fr;gap:9px}
-.history-item{padding:14px 0;border-bottom:1px solid var(--line)}
-.history-item:last-child{border-bottom:0}
-.history-top{display:flex;justify-content:space-between;gap:10px;font-weight:800}
-.plus{color:var(--green)}.minus{color:var(--red)}
-.month-title{font-size:17px;font-weight:800;margin:17px 0 4px}
-.muted{color:var(--muted);font-size:13px}
-.empty{text-align:center;color:var(--muted);padding:25px 8px}
-.notice{background:#fafafa;border-radius:12px;padding:11px;margin-top:12px;color:var(--muted);font-size:12px}
-#chartWrap{height:310px}.chart-status{font-size:12px;color:var(--muted);margin-bottom:7px}
-.bottom{
-  position:fixed;left:50%;bottom:0;transform:translateX(-50%);width:100%;max-width:720px;
-  background:#fff;border-top:1px solid #e9e9e9;display:grid;grid-template-columns:repeat(4,1fr);
-  padding:8px 7px calc(8px + env(safe-area-inset-bottom));z-index:30
-}
-.bottom button{border:0;background:transparent;color:#777;padding:5px 2px;font-size:12px;font-weight:700}
-.bottom button.active{color:var(--pink)}
-.bottom .bi{display:block;font-size:22px;line-height:24px;margin-bottom:2px}
-.auth{
-  min-height:100vh;background:linear-gradient(135deg,var(--pink),#b90045);
-  display:flex;align-items:center;justify-content:center;padding:20px
-}
-.auth-card{background:#fff;border-radius:22px;width:100%;max-width:410px;padding:24px;box-shadow:0 15px 40px rgba(0,0,0,.2)}
-.auth-logo{text-align:center;font-size:52px}.auth h1{text-align:center;margin:8px 0 4px}.auth-sub{text-align:center;color:var(--muted);font-size:13px;margin-bottom:18px}
-.auth button{width:100%;border:0;border-radius:12px;background:var(--pink);color:#fff;padding:13px;font-weight:800;margin-top:12px}
-.auth .alt{background:#eee;color:#222}
-.auth-msg{text-align:center;font-size:13px;margin-top:12px;min-height:18px}
-.user-row{display:flex;justify-content:space-between;align-items:center;gap:10px}
-.logout{font-size:12px}
-.loading{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:99}
-.loader{text-align:center}.bee{font-size:58px}.loader b{display:block;font-size:19px;margin-top:8px}
-.toast{position:fixed;left:50%;bottom:86px;transform:translateX(-50%) translateY(15px);background:#222;color:#fff;padding:11px 16px;border-radius:12px;opacity:0;pointer-events:none;transition:.25s;z-index:60;max-width:90%;text-align:center;font-size:13px}
-.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
-.hidden{display:none!important}
-@media(max-width:480px){
-  .content{padding-left:10px;padding-right:10px}
-  .top{padding-left:17px;padding-right:17px}
-  .balance{font-size:29px}
-  .stats{gap:8px}
-  .search-row{grid-template-columns:1fr}
-}
+.day-nav{display:grid;grid-template-columns:48px 1fr 48px;gap:8px;align-items:center;margin-top:12px}
+.day-nav button{border:0;border-radius:12px;background:#f0f0f0;padding:11px;font-size:18px;font-weight:800}
+.day-box{background:#fafafa;border-radius:14px;padding:12px;text-align:center}
+.day-name{font-size:18px;font-weight:800}
+.day-date{color:var(--muted);font-size:12px;margin-top:3px}
+.daily-total{font-size:30px;font-weight:800;color:var(--red);margin-top:8px}
+.daily-list{margin-top:12px}
+.daily-item{padding:11px 0;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;gap:10px}
+.daily-item:last-child{border-bottom:0}
 </style>
-</head>
-<body>
 
-<div id="loading" class="loading">
-  <div class="loader"><div class="bee">🐝</div><b>Money Archives</b><div class="muted">Menyiapkan aplikasi...</div></div>
-</div>
+<!-- TAMBAHKAN SETELAH TOMBOL D DI .menu-grid -->
+<button id="mE" class="menu-btn" onclick="bukaMenu('E')">
+  <div class="menu-icon">🗓️</div>
+  <div class="menu-title">Harian</div>
+  <div class="menu-desc">Pengeluaran per hari</div>
+</button>
 
-<script>
-// Failsafe: jangan biarkan layar loading menggantung.
-setTimeout(function(){
-  var loading=document.getElementById("loading");
-  var auth=document.getElementById("authScreen");
-  var app=document.getElementById("app");
-  if(loading) loading.classList.add("hidden");
-  if(auth && app && app.classList.contains("hidden")) auth.classList.remove("hidden");
-}, 3500);
-</script>
+<!-- TAMBAHKAN SETELAH SECTION D -->
+<section id="secE" class="section">
+  <div class="card">
+    <h2>🗓️ Pengeluaran Harian</h2>
 
-<div id="authScreen" class="auth hidden">
-  <div class="auth-card">
-    <div class="auth-logo">🐝</div>
-    <h1>Money Archives</h1>
-    <div class="auth-sub">Masuk agar data uangmu tersimpan di cloud dan bisa dipakai di perangkat lain.</div>
-    <label>Email</label>
-    <input id="email" type="email" autocomplete="email" placeholder="email kamu">
-    <label>Password</label>
-    <input id="password" type="password" autocomplete="current-password" placeholder="minimal 6 karakter">
-    <button onclick="login()">Masuk</button>
-    <button class="alt" onclick="daftar()">Daftar Akun Baru</button>
-    <div id="authMsg" class="auth-msg"></div>
+    <label>Pilih Hari</label>
+    <input id="tanggalHarian" type="date" onchange="renderHarian()">
+
+    <div class="day-nav">
+      <button onclick="ubahHari(-1)">‹</button>
+      <div class="day-box">
+        <div id="namaHari" class="day-name">-</div>
+        <div id="tanggalHari" class="day-date">-</div>
+      </div>
+      <button onclick="ubahHari(1)">›</button>
+    </div>
+
+    <div class="stat" style="margin-top:14px">
+      <span class="label">Total Pengeluaran Hari Ini</span>
+      <div id="pengeluaranHarian" class="daily-total">Rp0</div>
+    </div>
+
+    <div id="jumlahTransaksiHarian" class="notice">
+      Belum ada pengeluaran pada hari ini.
+    </div>
   </div>
-</div>
 
-<div id="app" class="app hidden">
-  <header class="top">
-    <div class="top-row">
-      <div>
-        <div class="greeting" id="greeting">Selamat malam!</div>
-        <div class="username" id="username">Money Archives</div>
-      </div>
-      <div class="logo">🐝</div>
-    </div>
-    <div class="cloud" id="cloudStatus">☁️ Data tersimpan di cloud</div>
-  </header>
+  <div class="card">
+    <h2>📜 Detail Pengeluaran</h2>
+    <div id="detailHarian"></div>
+  </div>
+</section>
 
-  <main class="content">
-    <div class="card balance-card">
-      <div class="label">Saldo Saat Ini</div>
-      <div id="saldo" class="balance">Rp0</div>
-      <div class="stats">
-        <div class="stat"><span class="label">Pemasukan</span><b id="totalMasuk" class="income">Rp0</b></div>
-        <div class="stat"><span class="label">Pengeluaran</span><b id="totalKeluar" class="expense">Rp0</b></div>
-      </div>
-    </div>
-
-    <div class="menu-grid">
-      <button id="mA" class="menu-btn active" onclick="bukaMenu('A')"><div class="menu-icon">💸</div><div class="menu-title">Uang</div><div class="menu-desc">Pemasukan & pengeluaran</div></button>
-      <button id="mB" class="menu-btn" onclick="bukaMenu('B')"><div class="menu-icon">🎯</div><div class="menu-title">Tabungan</div><div class="menu-desc">Target & progres</div></button>
-      <button id="mC" class="menu-btn" onclick="bukaMenu('C')"><div class="menu-icon">📈</div><div class="menu-title">Grafik</div><div class="menu-desc">Pergerakan saldo</div></button>
-      <button id="mD" class="menu-btn" onclick="bukaMenu('D')"><div class="menu-icon">📜</div><div class="menu-title">Riwayat</div><div class="menu-desc">Catatan permanen</div></button>
-    </div>
-
-    <section id="secA" class="section active">
-      <div class="card">
-        <div class="user-row"><h2>💸 Tambah Uang</h2><button class="secondary logout" onclick="logout()">Keluar</button></div>
-        <label>Jenis</label>
-        <select id="jenis">
-          <option value="masuk">➕ Pemasukan</option>
-          <option value="keluar">➖ Pengeluaran</option>
-        </select>
-        <label>Nominal</label>
-        <input id="nominal" inputmode="text" placeholder="10rb, 10k, 1jt, 1,5jt, 10.000">
-        <label>Keterangan</label>
-        <input id="keterangan" placeholder="Contoh: Gaji, makan, bensin...">
-        <button class="primary" onclick="tambahUang()">Simpan Transaksi</button>
-      </div>
-    </section>
-
-    <section id="secB" class="section">
-      <div class="card">
-        <div class="target-row">
-          <div><div class="label">🎯 Target Tabungan</div><b id="targetText">Belum ada target</b></div>
-          <button class="secondary" onclick="ubahTarget()">Atur</button>
-        </div>
-        <div id="targetInfo" class="muted" style="margin-top:9px">Atur target tabunganmu.</div>
-        <div class="progress"><div id="progressBar"></div></div>
-      </div>
-      <div class="card">
-        <h2>🏦 Tabungan</h2>
-        <div class="stat"><span class="label">Tabungan Saat Ini</span><div id="tabungan" class="big-stat">Rp0</div></div>
-        <label>Jenis</label>
-        <select id="jenisTabungan">
-          <option value="tabungan_masuk">🏦 Masukkan ke Tabungan</option>
-          <option value="tabungan_keluar">↩️ Ambil dari Tabungan</option>
-        </select>
-        <label>Nominal</label>
-        <input id="nominalTabungan" inputmode="text" placeholder="Contoh: 50rb">
-        <label>Keterangan</label>
-        <input id="keteranganTabungan" placeholder="Contoh: Nabung mingguan...">
-        <button class="primary" onclick="tambahTabungan()">Simpan Tabungan</button>
-      </div>
-    </section>
-
-    <section id="secC" class="section">
-      <div class="card">
-        <h2>📈 Grafik Saldo</h2>
-        <div id="chartStatus" class="chart-status">Menyiapkan grafik...</div>
-        <div id="chartWrap"><canvas id="chart"></canvas></div>
-      </div>
-    </section>
-
-    <section id="secD" class="section">
-      <div class="card">
-        <h2>📜 Riwayat Transaksi</h2>
-        <div class="search-row">
-          <div><label>Bulan</label>
-            <select id="filterBulan" onchange="renderHistory()">
-              <option value="all">Semua bulan</option>
-              <option value="0">Januari</option><option value="1">Februari</option><option value="2">Maret</option><option value="3">April</option>
-              <option value="4">Mei</option><option value="5">Juni</option><option value="6">Juli</option><option value="7">Agustus</option>
-              <option value="8">September</option><option value="9">Oktober</option><option value="10">November</option><option value="11">Desember</option>
-            </select>
-          </div>
-          <div><label>Tahun</label><select id="filterTahun" onchange="renderHistory()"><option value="all">Semua tahun</option></select></div>
-        </div>
-        <label>Cari</label>
-        <input id="search" oninput="renderHistory()" placeholder="Cari: gaji, makan, bensin...">
-        <div class="notice">🔒 Riwayat bersifat permanen dari aplikasi ini dan <b>tidak ada tombol hapus</b>.</div>
-        <div id="history"></div>
-      </div>
-    </section>
-  </main>
-
-  <nav class="bottom">
-    <button id="bA" class="active" onclick="bukaMenu('A')"><span class="bi">💸</span>Uang</button>
-    <button id="bB" onclick="bukaMenu('B')"><span class="bi">🎯</span>Tabungan</button>
-    <button id="bC" onclick="bukaMenu('C')"><span class="bi">📈</span>Grafik</button>
-    <button id="bD" onclick="bukaMenu('D')"><span class="bi">📜</span>Riwayat</button>
-  </nav>
-</div>
-
-<div id="toast" class="toast"></div>
+<!-- GANTI NAV BOTTOM LAMA MENJADI INI -->
+<nav class="bottom">
+  <button id="bA" class="active" onclick="bukaMenu('A')"><span class="bi">💸</span>Uang</button>
+  <button id="bB" onclick="bukaMenu('B')"><span class="bi">🎯</span>Tabungan</button>
+  <button id="bC" onclick="bukaMenu('C')"><span class="bi">📈</span>Grafik</button>
+  <button id="bD" onclick="bukaMenu('D')"><span class="bi">📜</span>Riwayat</button>
+  <button id="bE" onclick="bukaMenu('E')"><span class="bi">🗓️</span>Harian</button>
+</nav>
+<!-- MONEY ARCHIVES — BAGIAN 2/2
+Tambahkan perubahan JavaScript ini ke kode asli:
+1) Ganti bukaMenu() lama.
+2) Ganti buatGrafik() lama.
+3) Tambahkan fungsi-fungsi harian.
+4) Ganti DOMContentLoaded.
+-->
 
 <script>
-/* =========================================================
-   1) TEMPEL 2 NILAI DARI SUPABASE DI SINI
-   ========================================================= */
-const SUPABASE_URL = "https://bqjzwwdhscgwmecuaveo.supabase.co";
-const SUPABASE_KEY = "sb_publishable_HDrPq5sqxx8Pwk8j2p3kuw_U7j4fz3s";
-
-/* Jangan masukkan service_role/secret key di sini. */
-let supabaseClient = null;
-
-let data={saldo:0,tabungan:0,target:0,riwayat:[]};
-let chart=null,chartReady=false,currentUser=null;
-const namaBulan=["Januari","Februari","Maret","April","Mei","Juni","Juli","Agustus","September","Oktober","November","Desember"];
-
-function rupiah(n){return new Intl.NumberFormat("id-ID",{style:"currency",currency:"IDR",maximumFractionDigits:0}).format(Number(n)||0)}
-function escapeHTML(s){return String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]))}
-function parseNominal(value){
-  let s=String(value).toLowerCase().trim().replace(/\s+/g,""); if(!s)return NaN;
-  let mult=1;
-  if(s.endsWith("juta")||s.endsWith("jt")){mult=1000000;s=s.replace(/juta$/,"").replace(/jt$/,"")}
-  else if(s.endsWith("ribu")||s.endsWith("rb")){mult=1000;s=s.replace(/ribu$/,"").replace(/rb$/,"")}
-  else if(s.endsWith("k")){mult=1000;s=s.slice(0,-1)}
-  s=s.replace(/[^\d.,-]/g,""); if(!s)return NaN;
-  if(mult!==1){s=s.replace(/\./g,"").replace(",",".");const n=parseFloat(s);return Number.isFinite(n)?Math.round(n*mult):NaN}
-  if(s.includes(",")){s=s.replace(/\./g,"").replace(",",".");const n=parseFloat(s);return Number.isFinite(n)?Math.round(n):NaN}
-  if(/^\d{1,3}(\.\d{3})+$/.test(s))s=s.replace(/\./g,"");
-  const n=Number(s);return Number.isFinite(n)?Math.round(n):NaN
-}
-function toast(msg){
-  const el=document.getElementById("toast");el.textContent=msg;el.classList.add("show");
-  clearTimeout(window.toastTimer);window.toastTimer=setTimeout(()=>el.classList.remove("show"),2400)
-}
-function waktuSapaan(){
-  const h=new Date().getHours();
-  return h<11?"Selamat pagi!":h<15?"Selamat siang!":h<18?"Selamat sore!":"Selamat malam!"
-}
-function setAuthMsg(msg,ok=false){
-  const el=document.getElementById("authMsg");el.textContent=msg;el.style.color=ok?"#159447":"#e53935"
-}
-function showLoading(show){document.getElementById("loading").classList.toggle("hidden",!show)}
-function showApp(){
-  document.getElementById("authScreen").classList.add("hidden");
-  document.getElementById("app").classList.remove("hidden");
-  showLoading(false)
-}
-function showAuth(){
-  document.getElementById("app").classList.add("hidden");
-  document.getElementById("authScreen").classList.remove("hidden");
-  showLoading(false)
-}
 function bukaMenu(menu){
-  ["A","B","C","D"].forEach(x=>{
+  ["A","B","C","D","E"].forEach(x=>{
     document.getElementById("sec"+x).classList.toggle("active",x===menu);
     document.getElementById("m"+x).classList.toggle("active",x===menu);
     document.getElementById("b"+x).classList.toggle("active",x===menu);
   });
   if(menu==="C")setTimeout(buatGrafik,30);
-  if(menu==="D")renderHistory()
+  if(menu==="D")renderHistory();
+  if(menu==="E")renderHarian();
 }
-function updateTampilan(){
-  document.getElementById("saldo").textContent=rupiah(data.saldo);
-  document.getElementById("tabungan").textContent=rupiah(data.tabungan);
-  let masuk=0,keluar=0;
-  data.riwayat.forEach(t=>{if(t.jenis==="masuk")masuk+=t.jumlah;if(t.jenis==="keluar")keluar+=t.jumlah});
-  document.getElementById("totalMasuk").textContent=rupiah(masuk);
-  document.getElementById("totalKeluar").textContent=rupiah(keluar);
-  if(data.target>0){
-    const p=Math.min(100,data.tabungan/data.target*100);
-    document.getElementById("targetText").textContent=rupiah(data.target);
-    document.getElementById("targetInfo").textContent=rupiah(data.tabungan)+" / "+rupiah(data.target)+" • "+p.toFixed(1)+"%";
-    document.getElementById("progressBar").style.width=p+"%";
-  }else{
-    document.getElementById("targetText").textContent="Belum ada target";
-    document.getElementById("targetInfo").textContent="Atur target tabunganmu.";
-    document.getElementById("progressBar").style.width="0%";
-  }
-  isiTahun();renderHistory();
-  if(chartReady)setTimeout(buatGrafik,30)
+
+function formatTanggalInput(d){
+  const y=d.getFullYear();
+  const m=String(d.getMonth()+1).padStart(2,"0");
+  const day=String(d.getDate()).padStart(2,"0");
+  return `${y}-${m}-${day}`;
 }
-function tambahRiwayat(jenis,jumlah,ket){
-  return {jenis,jumlah,keterangan:ket||"Tanpa keterangan",timestamp:new Date().toISOString(),saldoSetelah:data.saldo,tabunganSetelah:data.tabungan}
+
+function getTanggalHarian(){
+  const input=document.getElementById("tanggalHarian");
+  if(!input.value)input.value=formatTanggalInput(new Date());
+  const parts=input.value.split("-");
+  return new Date(Number(parts[0]),Number(parts[1])-1,Number(parts[2]));
 }
-async function simpanCloud(tx){
-  if(!supabaseClient || !currentUser)throw new Error("Belum login / Supabase belum siap");
-  const {error:e1}=await supabaseClient.from("transaksi").insert({
-    user_id:currentUser.id,jenis:tx.jenis,jumlah:tx.jumlah,keterangan:tx.keterangan,
-    timestamp:tx.timestamp,saldo_setelah:tx.saldoSetelah,tabungan_setelah:tx.tabunganSetelah
+
+function renderHarian(){
+  const tanggal=getTanggalHarian();
+
+  const namaHari=["Minggu","Senin","Selasa","Rabu","Kamis","Jumat","Sabtu"];
+  document.getElementById("namaHari").textContent=namaHari[tanggal.getDay()];
+  document.getElementById("tanggalHari").textContent=tanggal.toLocaleDateString("id-ID",{
+    day:"2-digit",month:"long",year:"numeric"
   });
-  if(e1)throw e1;
-  const {error:e2}=await supabaseClient.from("pengaturan").upsert({
-    user_id:currentUser.id,saldo:data.saldo,tabungan:data.tabungan,target:data.target,updated_at:new Date().toISOString()
-  });
-  if(e2)throw e2
-}
-async function simpanPengaturan(){
-  if(!supabaseClient || !currentUser)throw new Error("Supabase belum siap");
-  const {error}=await supabaseClient.from("pengaturan").upsert({
-    user_id:currentUser.id,saldo:data.saldo,tabungan:data.tabungan,target:data.target,updated_at:new Date().toISOString()
-  });
-  if(error)throw error
-}
-async function tambahUang(){
-  const jenis=document.getElementById("jenis").value;
-  const jumlah=parseNominal(document.getElementById("nominal").value);
-  const ket=document.getElementById("keterangan").value.trim();
-  if(!Number.isFinite(jumlah)||jumlah<=0){toast("❌ Nominal tidak valid");return}
-  if(jenis==="masuk")data.saldo+=jumlah;
-  else{if(jumlah>data.saldo){toast("❌ Saldo tidak cukup");return}data.saldo-=jumlah}
-  const tx=tambahRiwayat(jenis,jumlah,ket);
-  try{
-    await simpanCloud(tx);data.riwayat.push({...tx,id:"cloud-"+Date.now()});
-    document.getElementById("nominal").value="";document.getElementById("keterangan").value="";
-    updateTampilan();toast("✅ Transaksi tersimpan di cloud")
-  }catch(e){ 
-    if(jenis==="masuk")data.saldo-=jumlah;else data.saldo+=jumlah;
-    toast("❌ Gagal menyimpan: "+(e.message||"cek koneksi"))
-  }
-}
-async function tambahTabungan(){
-  const jenis=document.getElementById("jenisTabungan").value;
-  const jumlah=parseNominal(document.getElementById("nominalTabungan").value);
-  const ket=document.getElementById("keteranganTabungan").value.trim();
-  if(!Number.isFinite(jumlah)||jumlah<=0){toast("❌ Nominal tidak valid");return}
-  if(jenis==="tabungan_masuk"){
-    if(jumlah>data.saldo){toast("❌ Saldo tidak cukup");return}
-    data.saldo-=jumlah;data.tabungan+=jumlah
-  }else{
-    if(jumlah>data.tabungan){toast("❌ Tabungan tidak cukup");return}
-    data.tabungan-=jumlah;data.saldo+=jumlah
-  }
-  const tx=tambahRiwayat(jenis,jumlah,ket);
-  try{
-    await simpanCloud(tx);data.riwayat.push({...tx,id:"cloud-"+Date.now()});
-    document.getElementById("nominalTabungan").value="";document.getElementById("keteranganTabungan").value="";
-    updateTampilan();toast("✅ Tabungan tersimpan di cloud");
-    if(data.target>0&&data.tabungan>=data.target)setTimeout(()=>toast("🏆 Target tabungan tercapai!"),500)
-  }catch(e){
-    if(jenis==="tabungan_masuk"){data.saldo+=jumlah;data.tabungan-=jumlah}else{data.tabungan+=jumlah;data.saldo-=jumlah}
-    toast("❌ Gagal menyimpan: "+(e.message||"cek koneksi"))
-  }
-}
-async function ubahTarget(){
-  const input=prompt("Masukkan target tabungan.\nContoh: 10jt atau 10.000.000",data.target||"");
-  if(input===null)return;
-  const n=parseNominal(input);
-  if(!Number.isFinite(n)||n<=0){toast("❌ Target tidak valid");return}
-  const old=data.target;data.target=n;
-  try{await simpanPengaturan();updateTampilan();toast("🎯 Target disimpan: "+rupiah(n))}
-  catch(e){data.target=old;toast("❌ Target gagal disimpan")}
-}
-function isiTahun(){
-  const sel=document.getElementById("filterTahun"),old=sel.value;
-  const tahun=[...new Set(data.riwayat.map(t=>new Date(t.timestamp).getFullYear()))].sort((a,b)=>b-a);
-  sel.innerHTML='<option value="all">Semua tahun</option>'+tahun.map(y=>`<option value="${y}">${y}</option>`).join("");
-  if(tahun.map(String).includes(old))sel.value=old
-}
-function renderHistory(){
-  const el=document.getElementById("history");if(!el)return;
-  const bulan=document.getElementById("filterBulan").value,tahun=document.getElementById("filterTahun").value,q=document.getElementById("search").value.trim().toLowerCase();
-  let arr=data.riwayat.filter(t=>{
+
+  const pengeluaran=data.riwayat.filter(t=>{
+    if(t.jenis!=="keluar")return false;
     const d=new Date(t.timestamp);
-    return (bulan==="all"||d.getMonth()===Number(bulan))&&(tahun==="all"||d.getFullYear()===Number(tahun))&&(!q||String(t.keterangan).toLowerCase().includes(q)||String(t.jenis).toLowerCase().includes(q))
+    return d.getFullYear()===tanggal.getFullYear() &&
+           d.getMonth()===tanggal.getMonth() &&
+           d.getDate()===tanggal.getDate();
   });
-  if(!arr.length){el.innerHTML='<div class="empty">Belum ada riwayat yang cocok.</div>';return}
-  arr.sort((a,b)=>new Date(b.timestamp)-new Date(a.timestamp));
-  let html="",last="";
-  arr.forEach(t=>{
-    const d=new Date(t.timestamp),key=d.getFullYear()+"-"+d.getMonth();
-    if(key!==last){html+=`<div class="month-title">${namaBulan[d.getMonth()]} ${d.getFullYear()}</div>`;last=key}
-    const plus=["masuk","tabungan_keluar"].includes(t.jenis);
-    const label={masuk:"Pemasukan",keluar:"Pengeluaran",tabungan_masuk:"Tabungan Masuk",tabungan_keluar:"Tabungan Keluar"}[t.jenis]||t.jenis;
-    const tanggal=d.toLocaleDateString("id-ID",{day:"2-digit",month:"long",year:"numeric"});
-    const jam=d.toLocaleTimeString("id-ID",{hour:"2-digit",minute:"2-digit"});
-    html+=`<div class="history-item"><div class="history-top"><span>${escapeHTML(label)}</span><span class="${plus?"plus":"minus"}">${plus?"+":"-"}${rupiah(t.jumlah)}</span></div><div>${escapeHTML(t.keterangan)}</div><div class="muted">📅 ${tanggal} • ${jam} WIB</div><div class="muted">Saldo: ${rupiah(t.saldoSetelah)} • Tabungan: ${rupiah(t.tabunganSetelah)}</div></div>`
-  });
-  el.innerHTML=html
-}
-function loadChartJS(){
-  if(window.Chart){chartReady=true;document.getElementById("chartStatus").textContent="";buatGrafik();return}
-  const s=document.createElement("script");s.src="https://cdn.jsdelivr.net/npm/chart.js";
-  s.onload=()=>{chartReady=true;document.getElementById("chartStatus").textContent="";buatGrafik()};
-  s.onerror=()=>document.getElementById("chartStatus").textContent="Grafik membutuhkan koneksi internet.";
-  document.head.appendChild(s)
-}
-function buatGrafik(){
-  if(!window.Chart)return;
-  const canvas=document.getElementById("chart");if(!canvas)return;
-  let saldoAwal=data.saldo;
-  data.riwayat.slice().sort((a,b)=>new Date(a.timestamp)-new Date(b.timestamp)).forEach(t=>{
-    if(t.jenis==="masuk")saldoAwal-=t.jumlah;
-    if(t.jenis==="keluar")saldoAwal+=t.jumlah;
-    if(t.jenis==="tabungan_masuk")saldoAwal+=t.jumlah;
-    if(t.jenis==="tabungan_keluar")saldoAwal-=t.jumlah;
-  });
-  let saldo=saldoAwal,labels=["Awal"],values=[saldo];
-  data.riwayat.slice().sort((a,b)=>new Date(a.timestamp)-new Date(b.timestamp)).forEach((t,i)=>{
-    if(t.jenis==="masuk")saldo+=t.jumlah;
-    if(t.jenis==="keluar")saldo-=t.jumlah;
-    if(t.jenis==="tabungan_masuk")saldo-=t.jumlah;
-    if(t.jenis==="tabungan_keluar")saldo+=t.jumlah;
-    labels.push("#"+(i+1));values.push(saldo)
-  });
-  if(chart)chart.destroy();
-  chart=new Chart(canvas,{type:"line",data:{labels,datasets:[{label:"Saldo",data:values,tension:.3,fill:false,borderWidth:2,pointRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:true}},scales:{y:{ticks:{callback:v=>rupiah(v)}}}}})
-}
-async function loadCloud(){
-  if(!supabaseClient || !currentUser)throw new Error("Supabase belum siap");
-  const {data:settings,error:e1}=await supabaseClient.from("pengaturan").select("*").eq("user_id",currentUser.id).maybeSingle();
-  if(e1)throw e1;
-  const {data:txs,error:e2}=await supabaseClient.from("transaksi").select("*").eq("user_id",currentUser.id).order("timestamp",{ascending:true});
-  if(e2)throw e2;
-  data={saldo:Number(settings?.saldo)||0,tabungan:Number(settings?.tabungan)||0,target:Number(settings?.target)||0,riwayat:(txs||[]).map(t=>({
-    id:t.id,jenis:t.jenis,jumlah:Number(t.jumlah)||0,keterangan:t.keterangan||"Tanpa keterangan",
-    timestamp:t.timestamp,saldoSetelah:Number(t.saldo_setelah)||0,tabunganSetelah:Number(t.tabungan_setelah)||0
-  }))};
-  if(!settings)await simpanPengaturan();
-  updateTampilan();
-  document.getElementById("cloudStatus").textContent="☁️ Tersambung • data tersimpan di cloud";
-}
-async function maybeImportLocal(){
-  const raw=localStorage.getItem("money_archives_v4");if(!raw||data.riwayat.length)return;
-  try{
-    const old=JSON.parse(raw);
-    if(!old||!Array.isArray(old.riwayat)||!old.riwayat.length)return;
-    if(!confirm("Ditemukan riwayat lama di perangkat ini. Impor ke Supabase sekarang?"))return;
-    for(const t of old.riwayat){
-      await supabaseClient.from("transaksi").insert({
-        user_id:currentUser.id,jenis:t.jenis,jumlah:Number(t.jumlah)||0,keterangan:t.keterangan||"Tanpa keterangan",
-        timestamp:t.timestamp||new Date().toISOString(),saldo_setelah:Number(t.saldoSetelah)||0,tabungan_setelah:Number(t.tabunganSetelah)||0
-      });
-    }
-    await supabaseClient.from("pengaturan").upsert({
-      user_id:currentUser.id,saldo:Number(old.saldo)||0,tabungan:Number(old.tabungan)||0,target:Number(old.target)||0,updated_at:new Date().toISOString()
-    });
-    await loadCloud();toast("✅ Riwayat lama berhasil diimpor")
-  }catch(e){toast("❌ Impor riwayat gagal")}
-}
-async function pastikanSupabase(){
-  if(supabaseClient) return true;
-  setAuthMsg("⏳ Koneksi cloud sedang disiapkan...",true);
-  try{
-    if(!window.supabase){
-      try{await loadExternalScript("https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2",5000)}
-      catch(e){await loadExternalScript("https://unpkg.com/@supabase/supabase-js@2",5000)}
-    }
-    if(!window.supabase || typeof window.supabase.createClient!=="function") throw new Error("Library Supabase tidak tersedia");
-    supabaseClient=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
-    return true;
-  }catch(e){
-    console.error(e);
-    setAuthMsg("❌ Koneksi Supabase gagal. Coba refresh halaman.");
-    return false;
-  }
-}
-async function login(){
-  try{
-    const email=document.getElementById("email").value.trim(),password=document.getElementById("password").value;
-    if(!email||!password){setAuthMsg("Isi email dan password.");return}
-    if(!(await pastikanSupabase())) return;
-    setAuthMsg("⏳ Memproses login...",true);
-    const {data:r,error}=await supabaseClient.auth.signInWithPassword({email,password});
-    if(error){
-      console.error(error);
-      const msg=(error.message||"").toLowerCase();
-      if(msg.includes("email not confirmed")) setAuthMsg("❌ Email belum dikonfirmasi. Cek email konfirmasi dari Supabase.");
-      else if(msg.includes("invalid login credentials")) setAuthMsg("❌ Email atau password salah.");
-      else setAuthMsg("❌ Login gagal: "+(error.message||"kesalahan tidak diketahui"));
-      return;
-    }
-    setAuthMsg("✅ Login berhasil. Membuka aplikasi...",true);
-    if(r && r.user) await startUser(r.user);
-  }catch(e){
-    console.error(e);
-    setAuthMsg("❌ Error login: "+(e.message||e));
-  }
-}
-async function daftar(){
-  try{
-    const email=document.getElementById("email").value.trim(),password=document.getElementById("password").value;
-    if(!email||password.length<6){setAuthMsg("Email wajib diisi dan password minimal 6 karakter.");return}
-    if(!(await pastikanSupabase())) return;
-    setAuthMsg("⏳ Membuat akun...",true);
-    const {data:r,error}=await supabaseClient.auth.signUp({email,password});
-    if(error){console.error(error);setAuthMsg("❌ Pendaftaran gagal: "+(error.message||"kesalahan tidak diketahui"));return}
-    if(!r.session)setAuthMsg("✅ Akun dibuat. Cek email untuk konfirmasi, lalu masuk.",true);
-    else {setAuthMsg("✅ Akun berhasil dibuat.",true);if(r.user) await startUser(r.user)}
-  }catch(e){
-    console.error(e);
-    setAuthMsg("❌ Error pendaftaran: "+(e.message||e));
-  }
-}
-async function logout(){
-  await supabaseClient.auth.signOut();data={saldo:0,tabungan:0,target:0,riwayat:[]};showAuth();toast("Anda sudah keluar")
-}
-async function startUser(user){
-  currentUser=user;
-  const nama=(user.email||"Pengguna").split("@")[0];
-  document.getElementById("greeting").textContent=waktuSapaan();
-  document.getElementById("username").textContent=nama;
-  showApp();
-  try{await loadCloud();await maybeImportLocal()}catch(e){
-    document.getElementById("cloudStatus").textContent="⚠️ Gagal memuat cloud";
-    toast("❌ Gagal memuat data Supabase")
-  }
-}
-function loadExternalScript(src, timeoutMs=8000){
-  return new Promise((resolve,reject)=>{
-    if(src.includes("supabase") && window.supabase) return resolve();
-    const script=document.createElement("script");
-    let finished=false;
-    const done=(err)=>{
-      if(finished)return;
-      finished=true;
-      clearTimeout(timer);
-      script.onload=null;script.onerror=null;
-      err?reject(err):resolve();
-    };
-    const timer=setTimeout(()=>done(new Error("Timeout memuat koneksi internet")),timeoutMs);
-    script.src=src;
-    script.async=true;
-    script.onload=()=>done();
-    script.onerror=()=>done(new Error("Gagal memuat library"));
-    document.head.appendChild(script);
-  });
-}
 
-async function mulai(){
-  showLoading(true);
+  const total=pengeluaran.reduce((sum,t)=>sum+Number(t.jumlah||0),0);
+  document.getElementById("pengeluaranHarian").textContent=rupiah(total);
 
-  // Jangan biarkan loading menggantung jika library/Internet bermasalah.
-  if(SUPABASE_URL.includes("PASTE_")||SUPABASE_KEY.includes("PASTE_")){
-    showAuth();
-    setAuthMsg("Isi SUPABASE_URL dan SUPABASE_KEY di file ini dulu.");
+  document.getElementById("jumlahTransaksiHarian").textContent=
+    pengeluaran.length
+      ? `💸 ${pengeluaran.length} transaksi pengeluaran pada hari ini.`
+      : "Belum ada pengeluaran pada hari ini.";
+
+  const detail=document.getElementById("detailHarian");
+
+  if(!pengeluaran.length){
+    detail.innerHTML='<div class="empty">Tidak ada pengeluaran pada hari ini.</div>';
     return;
   }
 
-  try{
-    try{
-      await loadExternalScript("https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2",6000);
-    }catch(firstErr){
-      await loadExternalScript("https://unpkg.com/@supabase/supabase-js@2",6000);
+  pengeluaran.sort((a,b)=>new Date(b.timestamp)-new Date(a.timestamp));
+
+  detail.innerHTML=pengeluaran.map(t=>{
+    const d=new Date(t.timestamp);
+    return `<div class="daily-item">
+      <div>
+        <b>${escapeHTML(t.keterangan)}</b>
+        <div class="muted">${d.toLocaleTimeString("id-ID",{hour:"2-digit",minute:"2-digit"})} WIB</div>
+      </div>
+      <b class="minus">-${rupiah(t.jumlah)}</b>
+    </div>`;
+  }).join("");
+}
+
+function ubahHari(jumlah){
+  const tanggal=getTanggalHarian();
+  tanggal.setDate(tanggal.getDate()+jumlah);
+  document.getElementById("tanggalHarian").value=formatTanggalInput(tanggal);
+  renderHarian();
+}
+
+function buatGrafik(){
+  if(!window.Chart)return;
+
+  const canvas=document.getElementById("chart");
+  if(!canvas)return;
+
+  const harian={};
+
+  data.riwayat.forEach(t=>{
+    if(t.jenis!=="keluar")return;
+
+    const d=new Date(t.timestamp);
+    const key=d.getFullYear()+"-"+
+      String(d.getMonth()+1).padStart(2,"0")+"-"+
+      String(d.getDate()).padStart(2,"0");
+
+    if(!harian[key]){
+      harian[key]={
+        tanggal:new Date(d.getFullYear(),d.getMonth(),d.getDate()),
+        total:0
+      };
     }
 
-    if(!window.supabase || typeof window.supabase.createClient!=="function"){
-      throw new Error("Library Supabase tidak tersedia.");
-    }
+    harian[key].total+=Number(t.jumlah)||0;
+  });
 
-    supabaseClient=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+  const daftar=Object.values(harian).sort((a,b)=>a.tanggal-b.tanggal);
 
-    const {data:{session},error}=await supabaseClient.auth.getSession();
-    if(error)throw error;
+  const namaHariSingkat=["Min","Sen","Sel","Rab","Kam","Jum","Sab"];
 
-    supabaseClient.auth.onAuthStateChange((event,newSession)=>{
-      // INITIAL_SESSION ditangani oleh getSession() di bawah.
-      if(event==="SIGNED_IN" && newSession) startUser(newSession.user);
-      if(event==="SIGNED_OUT"){currentUser=null;showAuth();}
-    });
+  const labels=daftar.map(item=>{
+    const d=item.tanggal;
+    return namaHariSingkat[d.getDay()]+" "+d.getDate()+" "+
+      d.toLocaleDateString("id-ID",{month:"short"});
+  });
 
-    if(session) await startUser(session.user);
-    else showAuth();
-  }catch(e){
-    console.error(e);
-    showAuth();
-    setAuthMsg("⚠️ Supabase gagal dimuat. Periksa internet, Project URL, dan Publishable Key.");
+  const values=daftar.map(item=>item.total);
+
+  if(chart)chart.destroy();
+
+  if(!daftar.length){
+    document.getElementById("chartStatus").textContent=
+      "Belum ada data pengeluaran untuk dibuat grafik.";
+    return;
   }
+
+  document.getElementById("chartStatus").textContent=
+    "Total pengeluaran per hari";
+
+  chart=new Chart(canvas,{
+    type:"line",
+    data:{
+      labels:labels,
+      datasets:[{
+        label:"Pengeluaran Harian",
+        data:values,
+        tension:.3,
+        fill:false,
+        borderWidth:2,
+        pointRadius:4
+      }]
+    },
+    options:{
+      responsive:true,
+      maintainAspectRatio:false,
+      plugins:{legend:{display:true}},
+      scales:{y:{ticks:{callback:v=>rupiah(v)}}}
+    }
+  });
 }
 
 document.addEventListener("DOMContentLoaded",()=>{
-  // Grafik dimuat terpisah. Kalau Chart.js gagal, aplikasi tetap bisa dipakai.
+  const input=document.getElementById("tanggalHarian");
+  if(input)input.value=formatTanggalInput(new Date());
+
   loadChartJS();
   mulai();
 });
 </script>
-</body>
-</html>
