@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="id">
 <head>
@@ -68,7 +67,7 @@ input:focus,select:focus{border-color:var(--pink)}
 #chartWrap{height:310px}.chart-status{font-size:12px;color:var(--muted);margin-bottom:7px}
 .bottom{
   position:fixed;left:50%;bottom:0;transform:translateX(-50%);width:100%;max-width:720px;
-  background:#fff;border-top:1px solid #e9e9e9;display:grid;grid-template-columns:repeat(4,1fr);
+  background:#fff;border-top:1px solid #e9e9e9;display:grid;grid-template-columns:repeat(5,1fr);
   padding:8px 7px calc(8px + env(safe-area-inset-bottom));z-index:30
 }
 .bottom button{border:0;background:transparent;color:#777;padding:5px 2px;font-size:12px;font-weight:700}
@@ -90,6 +89,20 @@ input:focus,select:focus{border-color:var(--pink)}
 .toast{position:fixed;left:50%;bottom:86px;transform:translateX(-50%) translateY(15px);background:#222;color:#fff;padding:11px 16px;border-radius:12px;opacity:0;pointer-events:none;transition:.25s;z-index:60;max-width:90%;text-align:center;font-size:13px}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 .hidden{display:none!important}
+
+/* E - Harian */
+.day-nav{display:grid;grid-template-columns:45px 1fr 45px;gap:8px;align-items:center;margin-top:12px}
+.day-nav button{border:0;border-radius:12px;background:#f0f0f0;padding:11px;font-size:20px;font-weight:800}
+.day-box{background:#fafafa;border-radius:14px;padding:12px;text-align:center}
+.day-name{font-size:18px;font-weight:800}
+.day-date{color:var(--muted);font-size:12px;margin-top:3px}
+.daily-total{font-size:30px;font-weight:800;color:var(--red);margin-top:8px}
+.daily-item{padding:12px 0;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;gap:10px}
+.daily-item:last-child{border-bottom:0}
+
+/* Membuat menu E tetap berukuran sama dan berada di tengah baris ketiga */
+.menu-grid #mE{grid-column:1 / 3;width:50%;justify-self:center}
+
 @media(max-width:480px){
   .content{padding-left:10px;padding-right:10px}
   .top{padding-left:17px;padding-right:17px}
@@ -106,14 +119,13 @@ input:focus,select:focus{border-color:var(--pink)}
 </div>
 
 <script>
-// Failsafe: jangan biarkan layar loading menggantung.
 setTimeout(function(){
   var loading=document.getElementById("loading");
   var auth=document.getElementById("authScreen");
   var app=document.getElementById("app");
   if(loading) loading.classList.add("hidden");
   if(auth && app && app.classList.contains("hidden")) auth.classList.remove("hidden");
-}, 3500);
+},3500);
 </script>
 
 <div id="authScreen" class="auth hidden">
@@ -158,6 +170,7 @@ setTimeout(function(){
       <button id="mB" class="menu-btn" onclick="bukaMenu('B')"><div class="menu-icon">🎯</div><div class="menu-title">Tabungan</div><div class="menu-desc">Target & progres</div></button>
       <button id="mC" class="menu-btn" onclick="bukaMenu('C')"><div class="menu-icon">📈</div><div class="menu-title">Grafik</div><div class="menu-desc">Pergerakan saldo</div></button>
       <button id="mD" class="menu-btn" onclick="bukaMenu('D')"><div class="menu-icon">📜</div><div class="menu-title">Riwayat</div><div class="menu-desc">Catatan permanen</div></button>
+      <button id="mE" class="menu-btn" onclick="bukaMenu('E')"><div class="menu-icon">🗓️</div><div class="menu-title">Harian</div><div class="menu-desc">Pengeluaran per hari</div></button>
     </div>
 
     <section id="secA" class="section active">
@@ -203,7 +216,7 @@ setTimeout(function(){
 
     <section id="secC" class="section">
       <div class="card">
-        <h2>📈 Grafik Saldo</h2>
+        <h2>📈 Grafik Pengeluaran Harian</h2>
         <div id="chartStatus" class="chart-status">Menyiapkan grafik...</div>
         <div id="chartWrap"><canvas id="chart"></canvas></div>
       </div>
@@ -229,6 +242,35 @@ setTimeout(function(){
         <div id="history"></div>
       </div>
     </section>
+
+    <section id="secE" class="section">
+      <div class="card">
+        <h2>🗓️ Pengeluaran Harian</h2>
+        <label>Pilih Hari</label>
+        <input id="tanggalHarian" type="date" onchange="renderHarian()">
+
+        <div class="day-nav">
+          <button onclick="ubahHari(-1)">‹</button>
+          <div class="day-box">
+            <div id="namaHari" class="day-name">-</div>
+            <div id="tanggalHari" class="day-date">-</div>
+          </div>
+          <button onclick="ubahHari(1)">›</button>
+        </div>
+
+        <div class="stat" style="margin-top:14px">
+          <span class="label">Total Pengeluaran Hari Ini</span>
+          <div id="pengeluaranHarian" class="daily-total">Rp0</div>
+        </div>
+
+        <div id="jumlahTransaksiHarian" class="notice">Belum ada pengeluaran pada hari ini.</div>
+      </div>
+
+      <div class="card">
+        <h2>📜 Detail Pengeluaran</h2>
+        <div id="detailHarian"></div>
+      </div>
+    </section>
   </main>
 
   <nav class="bottom">
@@ -236,464 +278,91 @@ setTimeout(function(){
     <button id="bB" onclick="bukaMenu('B')"><span class="bi">🎯</span>Tabungan</button>
     <button id="bC" onclick="bukaMenu('C')"><span class="bi">📈</span>Grafik</button>
     <button id="bD" onclick="bukaMenu('D')"><span class="bi">📜</span>Riwayat</button>
+    <button id="bE" onclick="bukaMenu('E')"><span class="bi">🗓️</span>Harian</button>
   </nav>
 </div>
 
 <div id="toast" class="toast"></div>
 
 <script>
-/* =========================================================
-   1) TEMPEL 2 NILAI DARI SUPABASE DI SINI
-   ========================================================= */
 const SUPABASE_URL = "https://bqjzwwdhscgwmecuaveo.supabase.co";
 const SUPABASE_KEY = "sb_publishable_HDrPq5sqxx8Pwk8j2p3kuw_U7j4fz3s";
 
-/* Jangan masukkan service_role/secret key di sini. */
-let supabaseClient = null;
-
+let supabaseClient=null;
 let data={saldo:0,tabungan:0,target:0,riwayat:[]};
 let chart=null,chartReady=false,currentUser=null;
+
 const namaBulan=["Januari","Februari","Maret","April","Mei","Juni","Juli","Agustus","September","Oktober","November","Desember"];
 
 function rupiah(n){return new Intl.NumberFormat("id-ID",{style:"currency",currency:"IDR",maximumFractionDigits:0}).format(Number(n)||0)}
-function escapeHTML(s){return String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]))}
+
+function escapeHTML(s){
+  return String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]))
+}
+
 function parseNominal(value){
-  let s=String(value).toLowerCase().trim().replace(/\s+/g,""); if(!s)return NaN;
+  let s=String(value).toLowerCase().trim().replace(/\s+/g,"");
+  if(!s)return NaN;
   let mult=1;
-  if(s.endsWith("juta")||s.endsWith("jt")){mult=1000000;s=s.replace(/juta$/,"").replace(/jt$/,"")}
-  else if(s.endsWith("ribu")||s.endsWith("rb")){mult=1000;s=s.replace(/ribu$/,"").replace(/rb$/,"")}
-  else if(s.endsWith("k")){mult=1000;s=s.slice(0,-1)}
-  s=s.replace(/[^\d.,-]/g,""); if(!s)return NaN;
-  if(mult!==1){s=s.replace(/\./g,"").replace(",",".");const n=parseFloat(s);return Number.isFinite(n)?Math.round(n*mult):NaN}
-  if(s.includes(",")){s=s.replace(/\./g,"").replace(",",".");const n=parseFloat(s);return Number.isFinite(n)?Math.round(n):NaN}
+  if(s.endsWith("juta")||s.endsWith("jt")){
+    mult=1000000;s=s.replace(/juta$/,"").replace(/jt$/,"")
+  }else if(s.endsWith("ribu")||s.endsWith("rb")){
+    mult=1000;s=s.replace(/ribu$/,"").replace(/rb$/,"")
+  }else if(s.endsWith("k")){
+    mult=1000;s=s.slice(0,-1)
+  }
+  s=s.replace(/[^\d.,-]/g,"");
+  if(!s)return NaN;
+  if(mult!==1){
+    s=s.replace(/\./g,"").replace(",",".");
+    const n=parseFloat(s);
+    return Number.isFinite(n)?Math.round(n*mult):NaN
+  }
+  if(s.includes(",")){
+    s=s.replace(/\./g,"").replace(",",".");
+    const n=parseFloat(s);
+    return Number.isFinite(n)?Math.round(n):NaN
+  }
   if(/^\d{1,3}(\.\d{3})+$/.test(s))s=s.replace(/\./g,"");
-  const n=Number(s);return Number.isFinite(n)?Math.round(n):NaN
+  const n=Number(s);
+  return Number.isFinite(n)?Math.round(n):NaN
 }
+
 function toast(msg){
-  const el=document.getElementById("toast");el.textContent=msg;el.classList.add("show");
-  clearTimeout(window.toastTimer);window.toastTimer=setTimeout(()=>el.classList.remove("show"),2400)
+  const el=document.getElementById("toast");
+  el.textContent=msg;
+  el.classList.add("show");
+  clearTimeout(window.toastTimer);
+  window.toastTimer=setTimeout(()=>el.classList.remove("show"),2400)
 }
+
 function waktuSapaan(){
   const h=new Date().getHours();
   return h<11?"Selamat pagi!":h<15?"Selamat siang!":h<18?"Selamat sore!":"Selamat malam!"
 }
+
 function setAuthMsg(msg,ok=false){
-  const el=document.getElementById("authMsg");el.textContent=msg;el.style.color=ok?"#159447":"#e53935"
+  const el=document.getElementById("authMsg");
+  el.textContent=msg;
+  el.style.color=ok?"#159447":"#e53935"
 }
-function showLoading(show){document.getElementById("loading").classList.toggle("hidden",!show)}
+
+function showLoading(show){
+  document.getElementById("loading").classList.toggle("hidden",!show)
+}
+
 function showApp(){
   document.getElementById("authScreen").classList.add("hidden");
   document.getElementById("app").classList.remove("hidden");
   showLoading(false)
 }
+
 function showAuth(){
   document.getElementById("app").classList.add("hidden");
   document.getElementById("authScreen").classList.remove("hidden");
   showLoading(false)
 }
-function bukaMenu(menu){
-  ["A","B","C","D"].forEach(x=>{
-    document.getElementById("sec"+x).classList.toggle("active",x===menu);
-    document.getElementById("m"+x).classList.toggle("active",x===menu);
-    document.getElementById("b"+x).classList.toggle("active",x===menu);
-  });
-  if(menu==="C")setTimeout(buatGrafik,30);
-  if(menu==="D")renderHistory()
-}
-function updateTampilan(){
-  document.getElementById("saldo").textContent=rupiah(data.saldo);
-  document.getElementById("tabungan").textContent=rupiah(data.tabungan);
-  let masuk=0,keluar=0;
-  data.riwayat.forEach(t=>{if(t.jenis==="masuk")masuk+=t.jumlah;if(t.jenis==="keluar")keluar+=t.jumlah});
-  document.getElementById("totalMasuk").textContent=rupiah(masuk);
-  document.getElementById("totalKeluar").textContent=rupiah(keluar);
-  if(data.target>0){
-    const p=Math.min(100,data.tabungan/data.target*100);
-    document.getElementById("targetText").textContent=rupiah(data.target);
-    document.getElementById("targetInfo").textContent=rupiah(data.tabungan)+" / "+rupiah(data.target)+" • "+p.toFixed(1)+"%";
-    document.getElementById("progressBar").style.width=p+"%";
-  }else{
-    document.getElementById("targetText").textContent="Belum ada target";
-    document.getElementById("targetInfo").textContent="Atur target tabunganmu.";
-    document.getElementById("progressBar").style.width="0%";
-  }
-  isiTahun();renderHistory();
-  if(chartReady)setTimeout(buatGrafik,30)
-}
-function tambahRiwayat(jenis,jumlah,ket){
-  return {jenis,jumlah,keterangan:ket||"Tanpa keterangan",timestamp:new Date().toISOString(),saldoSetelah:data.saldo,tabunganSetelah:data.tabungan}
-}
-async function simpanCloud(tx){
-  if(!supabaseClient || !currentUser)throw new Error("Belum login / Supabase belum siap");
-  const {error:e1}=await supabaseClient.from("transaksi").insert({
-    user_id:currentUser.id,jenis:tx.jenis,jumlah:tx.jumlah,keterangan:tx.keterangan,
-    timestamp:tx.timestamp,saldo_setelah:tx.saldoSetelah,tabungan_setelah:tx.tabunganSetelah
-  });
-  if(e1)throw e1;
-  const {error:e2}=await supabaseClient.from("pengaturan").upsert({
-    user_id:currentUser.id,saldo:data.saldo,tabungan:data.tabungan,target:data.target,updated_at:new Date().toISOString()
-  });
-  if(e2)throw e2
-}
-async function simpanPengaturan(){
-  if(!supabaseClient || !currentUser)throw new Error("Supabase belum siap");
-  const {error}=await supabaseClient.from("pengaturan").upsert({
-    user_id:currentUser.id,saldo:data.saldo,tabungan:data.tabungan,target:data.target,updated_at:new Date().toISOString()
-  });
-  if(error)throw error
-}
-async function tambahUang(){
-  const jenis=document.getElementById("jenis").value;
-  const jumlah=parseNominal(document.getElementById("nominal").value);
-  const ket=document.getElementById("keterangan").value.trim();
-  if(!Number.isFinite(jumlah)||jumlah<=0){toast("❌ Nominal tidak valid");return}
-  if(jenis==="masuk")data.saldo+=jumlah;
-  else{if(jumlah>data.saldo){toast("❌ Saldo tidak cukup");return}data.saldo-=jumlah}
-  const tx=tambahRiwayat(jenis,jumlah,ket);
-  try{
-    await simpanCloud(tx);data.riwayat.push({...tx,id:"cloud-"+Date.now()});
-    document.getElementById("nominal").value="";document.getElementById("keterangan").value="";
-    updateTampilan();toast("✅ Transaksi tersimpan di cloud")
-  }catch(e){ 
-    if(jenis==="masuk")data.saldo-=jumlah;else data.saldo+=jumlah;
-    toast("❌ Gagal menyimpan: "+(e.message||"cek koneksi"))
-  }
-}
-async function tambahTabungan(){
-  const jenis=document.getElementById("jenisTabungan").value;
-  const jumlah=parseNominal(document.getElementById("nominalTabungan").value);
-  const ket=document.getElementById("keteranganTabungan").value.trim();
-  if(!Number.isFinite(jumlah)||jumlah<=0){toast("❌ Nominal tidak valid");return}
-  if(jenis==="tabungan_masuk"){
-    if(jumlah>data.saldo){toast("❌ Saldo tidak cukup");return}
-    data.saldo-=jumlah;data.tabungan+=jumlah
-  }else{
-    if(jumlah>data.tabungan){toast("❌ Tabungan tidak cukup");return}
-    data.tabungan-=jumlah;data.saldo+=jumlah
-  }
-  const tx=tambahRiwayat(jenis,jumlah,ket);
-  try{
-    await simpanCloud(tx);data.riwayat.push({...tx,id:"cloud-"+Date.now()});
-    document.getElementById("nominalTabungan").value="";document.getElementById("keteranganTabungan").value="";
-    updateTampilan();toast("✅ Tabungan tersimpan di cloud");
-    if(data.target>0&&data.tabungan>=data.target)setTimeout(()=>toast("🏆 Target tabungan tercapai!"),500)
-  }catch(e){
-    if(jenis==="tabungan_masuk"){data.saldo+=jumlah;data.tabungan-=jumlah}else{data.tabungan+=jumlah;data.saldo-=jumlah}
-    toast("❌ Gagal menyimpan: "+(e.message||"cek koneksi"))
-  }
-}
-async function ubahTarget(){
-  const input=prompt("Masukkan target tabungan.\nContoh: 10jt atau 10.000.000",data.target||"");
-  if(input===null)return;
-  const n=parseNominal(input);
-  if(!Number.isFinite(n)||n<=0){toast("❌ Target tidak valid");return}
-  const old=data.target;data.target=n;
-  try{await simpanPengaturan();updateTampilan();toast("🎯 Target disimpan: "+rupiah(n))}
-  catch(e){data.target=old;toast("❌ Target gagal disimpan")}
-}
-function isiTahun(){
-  const sel=document.getElementById("filterTahun"),old=sel.value;
-  const tahun=[...new Set(data.riwayat.map(t=>new Date(t.timestamp).getFullYear()))].sort((a,b)=>b-a);
-  sel.innerHTML='<option value="all">Semua tahun</option>'+tahun.map(y=>`<option value="${y}">${y}</option>`).join("");
-  if(tahun.map(String).includes(old))sel.value=old
-}
-function renderHistory(){
-  const el=document.getElementById("history");if(!el)return;
-  const bulan=document.getElementById("filterBulan").value,tahun=document.getElementById("filterTahun").value,q=document.getElementById("search").value.trim().toLowerCase();
-  let arr=data.riwayat.filter(t=>{
-    const d=new Date(t.timestamp);
-    return (bulan==="all"||d.getMonth()===Number(bulan))&&(tahun==="all"||d.getFullYear()===Number(tahun))&&(!q||String(t.keterangan).toLowerCase().includes(q)||String(t.jenis).toLowerCase().includes(q))
-  });
-  if(!arr.length){el.innerHTML='<div class="empty">Belum ada riwayat yang cocok.</div>';return}
-  arr.sort((a,b)=>new Date(b.timestamp)-new Date(a.timestamp));
-  let html="",last="";
-  arr.forEach(t=>{
-    const d=new Date(t.timestamp),key=d.getFullYear()+"-"+d.getMonth();
-    if(key!==last){html+=`<div class="month-title">${namaBulan[d.getMonth()]} ${d.getFullYear()}</div>`;last=key}
-    const plus=["masuk","tabungan_keluar"].includes(t.jenis);
-    const label={masuk:"Pemasukan",keluar:"Pengeluaran",tabungan_masuk:"Tabungan Masuk",tabungan_keluar:"Tabungan Keluar"}[t.jenis]||t.jenis;
-    const tanggal=d.toLocaleDateString("id-ID",{day:"2-digit",month:"long",year:"numeric"});
-    const jam=d.toLocaleTimeString("id-ID",{hour:"2-digit",minute:"2-digit"});
-    html+=`<div class="history-item"><div class="history-top"><span>${escapeHTML(label)}</span><span class="${plus?"plus":"minus"}">${plus?"+":"-"}${rupiah(t.jumlah)}</span></div><div>${escapeHTML(t.keterangan)}</div><div class="muted">📅 ${tanggal} • ${jam} WIB</div><div class="muted">Saldo: ${rupiah(t.saldoSetelah)} • Tabungan: ${rupiah(t.tabunganSetelah)}</div></div>`
-  });
-  el.innerHTML=html
-}
-function loadChartJS(){
-  if(window.Chart){chartReady=true;document.getElementById("chartStatus").textContent="";buatGrafik();return}
-  const s=document.createElement("script");s.src="https://cdn.jsdelivr.net/npm/chart.js";
-  s.onload=()=>{chartReady=true;document.getElementById("chartStatus").textContent="";buatGrafik()};
-  s.onerror=()=>document.getElementById("chartStatus").textContent="Grafik membutuhkan koneksi internet.";
-  document.head.appendChild(s)
-}
-function buatGrafik(){
-  if(!window.Chart)return;
-  const canvas=document.getElementById("chart");if(!canvas)return;
-  let saldoAwal=data.saldo;
-  data.riwayat.slice().sort((a,b)=>new Date(a.timestamp)-new Date(b.timestamp)).forEach(t=>{
-    if(t.jenis==="masuk")saldoAwal-=t.jumlah;
-    if(t.jenis==="keluar")saldoAwal+=t.jumlah;
-    if(t.jenis==="tabungan_masuk")saldoAwal+=t.jumlah;
-    if(t.jenis==="tabungan_keluar")saldoAwal-=t.jumlah;
-  });
-  let saldo=saldoAwal,labels=["Awal"],values=[saldo];
-  data.riwayat.slice().sort((a,b)=>new Date(a.timestamp)-new Date(b.timestamp)).forEach((t,i)=>{
-    if(t.jenis==="masuk")saldo+=t.jumlah;
-    if(t.jenis==="keluar")saldo-=t.jumlah;
-    if(t.jenis==="tabungan_masuk")saldo-=t.jumlah;
-    if(t.jenis==="tabungan_keluar")saldo+=t.jumlah;
-    labels.push("#"+(i+1));values.push(saldo)
-  });
-  if(chart)chart.destroy();
-  chart=new Chart(canvas,{type:"line",data:{labels,datasets:[{label:"Saldo",data:values,tension:.3,fill:false,borderWidth:2,pointRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:true}},scales:{y:{ticks:{callback:v=>rupiah(v)}}}}})
-}
-async function loadCloud(){
-  if(!supabaseClient || !currentUser)throw new Error("Supabase belum siap");
-  const {data:settings,error:e1}=await supabaseClient.from("pengaturan").select("*").eq("user_id",currentUser.id).maybeSingle();
-  if(e1)throw e1;
-  const {data:txs,error:e2}=await supabaseClient.from("transaksi").select("*").eq("user_id",currentUser.id).order("timestamp",{ascending:true});
-  if(e2)throw e2;
-  data={saldo:Number(settings?.saldo)||0,tabungan:Number(settings?.tabungan)||0,target:Number(settings?.target)||0,riwayat:(txs||[]).map(t=>({
-    id:t.id,jenis:t.jenis,jumlah:Number(t.jumlah)||0,keterangan:t.keterangan||"Tanpa keterangan",
-    timestamp:t.timestamp,saldoSetelah:Number(t.saldo_setelah)||0,tabunganSetelah:Number(t.tabungan_setelah)||0
-  }))};
-  if(!settings)await simpanPengaturan();
-  updateTampilan();
-  document.getElementById("cloudStatus").textContent="☁️ Tersambung • data tersimpan di cloud";
-}
-async function maybeImportLocal(){
-  const raw=localStorage.getItem("money_archives_v4");if(!raw||data.riwayat.length)return;
-  try{
-    const old=JSON.parse(raw);
-    if(!old||!Array.isArray(old.riwayat)||!old.riwayat.length)return;
-    if(!confirm("Ditemukan riwayat lama di perangkat ini. Impor ke Supabase sekarang?"))return;
-    for(const t of old.riwayat){
-      await supabaseClient.from("transaksi").insert({
-        user_id:currentUser.id,jenis:t.jenis,jumlah:Number(t.jumlah)||0,keterangan:t.keterangan||"Tanpa keterangan",
-        timestamp:t.timestamp||new Date().toISOString(),saldo_setelah:Number(t.saldoSetelah)||0,tabungan_setelah:Number(t.tabunganSetelah)||0
-      });
-    }
-    await supabaseClient.from("pengaturan").upsert({
-      user_id:currentUser.id,saldo:Number(old.saldo)||0,tabungan:Number(old.tabungan)||0,target:Number(old.target)||0,updated_at:new Date().toISOString()
-    });
-    await loadCloud();toast("✅ Riwayat lama berhasil diimpor")
-  }catch(e){toast("❌ Impor riwayat gagal")}
-}
-async function pastikanSupabase(){
-  if(supabaseClient) return true;
-  setAuthMsg("⏳ Koneksi cloud sedang disiapkan...",true);
-  try{
-    if(!window.supabase){
-      try{await loadExternalScript("https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2",5000)}
-      catch(e){await loadExternalScript("https://unpkg.com/@supabase/supabase-js@2",5000)}
-    }
-    if(!window.supabase || typeof window.supabase.createClient!=="function") throw new Error("Library Supabase tidak tersedia");
-    supabaseClient=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
-    return true;
-  }catch(e){
-    console.error(e);
-    setAuthMsg("❌ Koneksi Supabase gagal. Coba refresh halaman.");
-    return false;
-  }
-}
-async function login(){
-  try{
-    const email=document.getElementById("email").value.trim(),password=document.getElementById("password").value;
-    if(!email||!password){setAuthMsg("Isi email dan password.");return}
-    if(!(await pastikanSupabase())) return;
-    setAuthMsg("⏳ Memproses login...",true);
-    const {data:r,error}=await supabaseClient.auth.signInWithPassword({email,password});
-    if(error){
-      console.error(error);
-      const msg=(error.message||"").toLowerCase();
-      if(msg.includes("email not confirmed")) setAuthMsg("❌ Email belum dikonfirmasi. Cek email konfirmasi dari Supabase.");
-      else if(msg.includes("invalid login credentials")) setAuthMsg("❌ Email atau password salah.");
-      else setAuthMsg("❌ Login gagal: "+(error.message||"kesalahan tidak diketahui"));
-      return;
-    }
-    setAuthMsg("✅ Login berhasil. Membuka aplikasi...",true);
-    if(r && r.user) await startUser(r.user);
-  }catch(e){
-    console.error(e);
-    setAuthMsg("❌ Error login: "+(e.message||e));
-  }
-}
-async function daftar(){
-  try{
-    const email=document.getElementById("email").value.trim(),password=document.getElementById("password").value;
-    if(!email||password.length<6){setAuthMsg("Email wajib diisi dan password minimal 6 karakter.");return}
-    if(!(await pastikanSupabase())) return;
-    setAuthMsg("⏳ Membuat akun...",true);
-    const {data:r,error}=await supabaseClient.auth.signUp({email,password});
-    if(error){console.error(error);setAuthMsg("❌ Pendaftaran gagal: "+(error.message||"kesalahan tidak diketahui"));return}
-    if(!r.session)setAuthMsg("✅ Akun dibuat. Cek email untuk konfirmasi, lalu masuk.",true);
-    else {setAuthMsg("✅ Akun berhasil dibuat.",true);if(r.user) await startUser(r.user)}
-  }catch(e){
-    console.error(e);
-    setAuthMsg("❌ Error pendaftaran: "+(e.message||e));
-  }
-}
-async function logout(){
-  await supabaseClient.auth.signOut();data={saldo:0,tabungan:0,target:0,riwayat:[]};showAuth();toast("Anda sudah keluar")
-}
-async function startUser(user){
-  currentUser=user;
-  const nama=(user.email||"Pengguna").split("@")[0];
-  document.getElementById("greeting").textContent=waktuSapaan();
-  document.getElementById("username").textContent=nama;
-  showApp();
-  try{await loadCloud();await maybeImportLocal()}catch(e){
-    document.getElementById("cloudStatus").textContent="⚠️ Gagal memuat cloud";
-    toast("❌ Gagal memuat data Supabase")
-  }
-}
-function loadExternalScript(src, timeoutMs=8000){
-  return new Promise((resolve,reject)=>{
-    if(src.includes("supabase") && window.supabase) return resolve();
-    const script=document.createElement("script");
-    let finished=false;
-    const done=(err)=>{
-      if(finished)return;
-      finished=true;
-      clearTimeout(timer);
-      script.onload=null;script.onerror=null;
-      err?reject(err):resolve();
-    };
-    const timer=setTimeout(()=>done(new Error("Timeout memuat koneksi internet")),timeoutMs);
-    script.src=src;
-    script.async=true;
-    script.onload=()=>done();
-    script.onerror=()=>done(new Error("Gagal memuat library"));
-    document.head.appendChild(script);
-  });
-}
 
-async function mulai(){
-  showLoading(true);
-
-  // Jangan biarkan loading menggantung jika library/Internet bermasalah.
-  if(SUPABASE_URL.includes("PASTE_")||SUPABASE_KEY.includes("PASTE_")){
-    showAuth();
-    setAuthMsg("Isi SUPABASE_URL dan SUPABASE_KEY di file ini dulu.");
-    return;
-  }
-
-  try{
-    try{
-      await loadExternalScript("https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2",6000);
-    }catch(firstErr){
-      await loadExternalScript("https://unpkg.com/@supabase/supabase-js@2",6000);
-    }
-
-    if(!window.supabase || typeof window.supabase.createClient!=="function"){
-      throw new Error("Library Supabase tidak tersedia.");
-    }
-
-    supabaseClient=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
-
-    const {data:{session},error}=await supabaseClient.auth.getSession();
-    if(error)throw error;
-
-    supabaseClient.auth.onAuthStateChange((event,newSession)=>{
-      // INITIAL_SESSION ditangani oleh getSession() di bawah.
-      if(event==="SIGNED_IN" && newSession) startUser(newSession.user);
-      if(event==="SIGNED_OUT"){currentUser=null;showAuth();}
-    });
-
-    if(session) await startUser(session.user);
-    else showAuth();
-  }catch(e){
-    console.error(e);
-    showAuth();
-    setAuthMsg("⚠️ Supabase gagal dimuat. Periksa internet, Project URL, dan Publishable Key.");
-  }
-}
-
-document.addEventListener("DOMContentLoaded",()=>{
-  // Grafik dimuat terpisah. Kalau Chart.js gagal, aplikasi tetap bisa dipakai.
-  loadChartJS();
-  mulai();
-});
-</script>
-</body>
-</html>
-
-
-
-<!-- MONEY ARCHIVES — BAGIAN 1/2
-Tempel BAGIAN 1 lalu langsung sambung BAGIAN 2 tanpa tambahan apa pun.
-Bagian ini berisi perubahan CSS + menu E + section E.
--->
-
-<!-- PERUBAHAN CSS: tambahkan sebelum </style> -->
-<style>
-.day-nav{display:grid;grid-template-columns:48px 1fr 48px;gap:8px;align-items:center;margin-top:12px}
-.day-nav button{border:0;border-radius:12px;background:#f0f0f0;padding:11px;font-size:18px;font-weight:800}
-.day-box{background:#fafafa;border-radius:14px;padding:12px;text-align:center}
-.day-name{font-size:18px;font-weight:800}
-.day-date{color:var(--muted);font-size:12px;margin-top:3px}
-.daily-total{font-size:30px;font-weight:800;color:var(--red);margin-top:8px}
-.daily-list{margin-top:12px}
-.daily-item{padding:11px 0;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;gap:10px}
-.daily-item:last-child{border-bottom:0}
-</style>
-
-<!-- TAMBAHKAN SETELAH TOMBOL D DI .menu-grid -->
-<button id="mE" class="menu-btn" onclick="bukaMenu('E')">
-  <div class="menu-icon">🗓️</div>
-  <div class="menu-title">Harian</div>
-  <div class="menu-desc">Pengeluaran per hari</div>
-</button>
-
-<!-- TAMBAHKAN SETELAH SECTION D -->
-<section id="secE" class="section">
-  <div class="card">
-    <h2>🗓️ Pengeluaran Harian</h2>
-
-    <label>Pilih Hari</label>
-    <input id="tanggalHarian" type="date" onchange="renderHarian()">
-
-    <div class="day-nav">
-      <button onclick="ubahHari(-1)">‹</button>
-      <div class="day-box">
-        <div id="namaHari" class="day-name">-</div>
-        <div id="tanggalHari" class="day-date">-</div>
-      </div>
-      <button onclick="ubahHari(1)">›</button>
-    </div>
-
-    <div class="stat" style="margin-top:14px">
-      <span class="label">Total Pengeluaran Hari Ini</span>
-      <div id="pengeluaranHarian" class="daily-total">Rp0</div>
-    </div>
-
-    <div id="jumlahTransaksiHarian" class="notice">
-      Belum ada pengeluaran pada hari ini.
-    </div>
-  </div>
-
-  <div class="card">
-    <h2>📜 Detail Pengeluaran</h2>
-    <div id="detailHarian"></div>
-  </div>
-</section>
-
-<!-- GANTI NAV BOTTOM LAMA MENJADI INI -->
-<nav class="bottom">
-  <button id="bA" class="active" onclick="bukaMenu('A')"><span class="bi">💸</span>Uang</button>
-  <button id="bB" onclick="bukaMenu('B')"><span class="bi">🎯</span>Tabungan</button>
-  <button id="bC" onclick="bukaMenu('C')"><span class="bi">📈</span>Grafik</button>
-  <button id="bD" onclick="bukaMenu('D')"><span class="bi">📜</span>Riwayat</button>
-  <button id="bE" onclick="bukaMenu('E')"><span class="bi">🗓️</span>Harian</button>
-</nav>
-<!-- MONEY ARCHIVES — BAGIAN 2/2
-Tambahkan perubahan JavaScript ini ke kode asli:
-1) Ganti bukaMenu() lama.
-2) Ganti buatGrafik() lama.
-3) Tambahkan fungsi-fungsi harian.
-4) Ganti DOMContentLoaded.
--->
-
-<script>
 function bukaMenu(menu){
   ["A","B","C","D","E"].forEach(x=>{
     document.getElementById("sec"+x).classList.toggle("active",x===menu);
@@ -705,6 +374,255 @@ function bukaMenu(menu){
   if(menu==="E")renderHarian();
 }
 
+function updateTampilan(){
+  document.getElementById("saldo").textContent=rupiah(data.saldo);
+  document.getElementById("tabungan").textContent=rupiah(data.tabungan);
+
+  let masuk=0,keluar=0;
+  data.riwayat.forEach(t=>{
+    if(t.jenis==="masuk")masuk+=t.jumlah;
+    if(t.jenis==="keluar")keluar+=t.jumlah;
+  });
+
+  document.getElementById("totalMasuk").textContent=rupiah(masuk);
+  document.getElementById("totalKeluar").textContent=rupiah(keluar);
+
+  if(data.target>0){
+    const p=Math.min(100,data.tabungan/data.target*100);
+    document.getElementById("targetText").textContent=rupiah(data.target);
+    document.getElementById("targetInfo").textContent=rupiah(data.tabungan)+" / "+rupiah(data.target)+" • "+p.toFixed(1)+"%";
+    document.getElementById("progressBar").style.width=p+"%";
+  }else{
+    document.getElementById("targetText").textContent="Belum ada target";
+    document.getElementById("targetInfo").textContent="Atur target tabunganmu.";
+    document.getElementById("progressBar").style.width="0%";
+  }
+
+  isiTahun();
+  renderHistory();
+  renderHarian();
+
+  if(chartReady)setTimeout(buatGrafik,30)
+}
+
+function tambahRiwayat(jenis,jumlah,ket){
+  return {
+    jenis,jumlah,
+    keterangan:ket||"Tanpa keterangan",
+    timestamp:new Date().toISOString(),
+    saldoSetelah:data.saldo,
+    tabunganSetelah:data.tabungan
+  }
+}
+
+async function simpanCloud(tx){
+  if(!supabaseClient||!currentUser)throw new Error("Belum login / Supabase belum siap");
+
+  const {error:e1}=await supabaseClient.from("transaksi").insert({
+    user_id:currentUser.id,
+    jenis:tx.jenis,
+    jumlah:tx.jumlah,
+    keterangan:tx.keterangan,
+    timestamp:tx.timestamp,
+    saldo_setelah:tx.saldoSetelah,
+    tabungan_setelah:tx.tabunganSetelah
+  });
+
+  if(e1)throw e1;
+
+  const {error:e2}=await supabaseClient.from("pengaturan").upsert({
+    user_id:currentUser.id,
+    saldo:data.saldo,
+    tabungan:data.tabungan,
+    target:data.target,
+    updated_at:new Date().toISOString()
+  });
+
+  if(e2)throw e2
+}
+
+async function simpanPengaturan(){
+  if(!supabaseClient||!currentUser)throw new Error("Supabase belum siap");
+
+  const {error}=await supabaseClient.from("pengaturan").upsert({
+    user_id:currentUser.id,
+    saldo:data.saldo,
+    tabungan:data.tabungan,
+    target:data.target,
+    updated_at:new Date().toISOString()
+  });
+
+  if(error)throw error
+}
+
+async function tambahUang(){
+  const jenis=document.getElementById("jenis").value;
+  const jumlah=parseNominal(document.getElementById("nominal").value);
+  const ket=document.getElementById("keterangan").value.trim();
+
+  if(!Number.isFinite(jumlah)||jumlah<=0){
+    toast("❌ Nominal tidak valid");return
+  }
+
+  if(jenis==="masuk")data.saldo+=jumlah;
+  else{
+    if(jumlah>data.saldo){toast("❌ Saldo tidak cukup");return}
+    data.saldo-=jumlah
+  }
+
+  const tx=tambahRiwayat(jenis,jumlah,ket);
+
+  try{
+    await simpanCloud(tx);
+    data.riwayat.push({...tx,id:"cloud-"+Date.now()});
+    document.getElementById("nominal").value="";
+    document.getElementById("keterangan").value="";
+    updateTampilan();
+    toast("✅ Transaksi tersimpan di cloud")
+  }catch(e){
+    if(jenis==="masuk")data.saldo-=jumlah;
+    else data.saldo+=jumlah;
+    toast("❌ Gagal menyimpan: "+(e.message||"cek koneksi"))
+  }
+}
+
+async function tambahTabungan(){
+  const jenis=document.getElementById("jenisTabungan").value;
+  const jumlah=parseNominal(document.getElementById("nominalTabungan").value);
+  const ket=document.getElementById("keteranganTabungan").value.trim();
+
+  if(!Number.isFinite(jumlah)||jumlah<=0){
+    toast("❌ Nominal tidak valid");return
+  }
+
+  if(jenis==="tabungan_masuk"){
+    if(jumlah>data.saldo){toast("❌ Saldo tidak cukup");return}
+    data.saldo-=jumlah;
+    data.tabungan+=jumlah
+  }else{
+    if(jumlah>data.tabungan){toast("❌ Tabungan tidak cukup");return}
+    data.tabungan-=jumlah;
+    data.saldo+=jumlah
+  }
+
+  const tx=tambahRiwayat(jenis,jumlah,ket);
+
+  try{
+    await simpanCloud(tx);
+    data.riwayat.push({...tx,id:"cloud-"+Date.now()});
+    document.getElementById("nominalTabungan").value="";
+    document.getElementById("keteranganTabungan").value="";
+    updateTampilan();
+    toast("✅ Tabungan tersimpan di cloud");
+    if(data.target>0&&data.tabungan>=data.target)
+      setTimeout(()=>toast("🏆 Target tabungan tercapai!"),500)
+  }catch(e){
+    if(jenis==="tabungan_masuk"){
+      data.saldo+=jumlah;data.tabungan-=jumlah
+    }else{
+      data.tabungan+=jumlah;data.saldo-=jumlah
+    }
+    toast("❌ Gagal menyimpan: "+(e.message||"cek koneksi"))
+  }
+}
+
+async function ubahTarget(){
+  const input=prompt("Masukkan target tabungan.\nContoh: 10jt atau 10.000.000",data.target||"");
+  if(input===null)return;
+
+  const n=parseNominal(input);
+  if(!Number.isFinite(n)||n<=0){
+    toast("❌ Target tidak valid");return
+  }
+
+  const old=data.target;
+  data.target=n;
+
+  try{
+    await simpanPengaturan();
+    updateTampilan();
+    toast("🎯 Target disimpan: "+rupiah(n))
+  }catch(e){
+    data.target=old;
+    toast("❌ Target gagal disimpan")
+  }
+}
+
+function isiTahun(){
+  const sel=document.getElementById("filterTahun");
+  const old=sel.value;
+  const tahun=[...new Set(data.riwayat.map(t=>new Date(t.timestamp).getFullYear()))].sort((a,b)=>b-a);
+
+  sel.innerHTML='<option value="all">Semua tahun</option>'+
+    tahun.map(y=>`<option value="${y}">${y}</option>`).join("");
+
+  if(tahun.map(String).includes(old))sel.value=old
+}
+
+function renderHistory(){
+  const el=document.getElementById("history");
+  if(!el)return;
+
+  const bulan=document.getElementById("filterBulan").value;
+  const tahun=document.getElementById("filterTahun").value;
+  const q=document.getElementById("search").value.trim().toLowerCase();
+
+  let arr=data.riwayat.filter(t=>{
+    const d=new Date(t.timestamp);
+    return (bulan==="all"||d.getMonth()===Number(bulan)) &&
+           (tahun==="all"||d.getFullYear()===Number(tahun)) &&
+           (!q||String(t.keterangan).toLowerCase().includes(q)||String(t.jenis).toLowerCase().includes(q))
+  });
+
+  if(!arr.length){
+    el.innerHTML='<div class="empty">Belum ada riwayat yang cocok.</div>';
+    return
+  }
+
+  arr.sort((a,b)=>new Date(b.timestamp)-new Date(a.timestamp));
+
+  let html="",last="";
+
+  arr.forEach(t=>{
+    const d=new Date(t.timestamp);
+    const key=d.getFullYear()+"-"+d.getMonth();
+
+    if(key!==last){
+      html+=`<div class="month-title">${namaBulan[d.getMonth()]} ${d.getFullYear()}</div>`;
+      last=key
+    }
+
+
+
+    const plus=["masuk","tabungan_keluar"].includes(t.jenis);
+    const label={
+      masuk:"Pemasukan",
+      keluar:"Pengeluaran",
+      tabungan_masuk:"Tabungan Masuk",
+      tabungan_keluar:"Tabungan Keluar"
+    }[t.jenis]||t.jenis;
+
+    const tanggal=d.toLocaleDateString("id-ID",{day:"2-digit",month:"long",year:"numeric"});
+    const jam=d.toLocaleTimeString("id-ID",{hour:"2-digit",minute:"2-digit"});
+
+    html+=`<div class="history-item">
+      <div class="history-top">
+        <span>${escapeHTML(label)}</span>
+        <span class="${plus?"plus":"minus"}">${plus?"+":"-"}${rupiah(t.jumlah)}</span>
+      </div>
+      <div>${escapeHTML(t.keterangan)}</div>
+      <div class="muted">📅 ${tanggal} • ${jam} WIB</div>
+      <div class="muted">Saldo: ${rupiah(t.saldoSetelah)} • Tabungan: ${rupiah(t.tabunganSetelah)}</div>
+    </div>`
+  });
+
+  el.innerHTML=html
+}
+
+/* =========================
+   E — PENGELUARAN HARIAN
+   ========================= */
+
 function formatTanggalInput(d){
   const y=d.getFullYear();
   const m=String(d.getMonth()+1).padStart(2,"0");
@@ -714,30 +632,57 @@ function formatTanggalInput(d){
 
 function getTanggalHarian(){
   const input=document.getElementById("tanggalHarian");
-  if(!input.value)input.value=formatTanggalInput(new Date());
+
+  if(!input.value){
+    input.value=formatTanggalInput(new Date());
+  }
+
   const parts=input.value.split("-");
-  return new Date(Number(parts[0]),Number(parts[1])-1,Number(parts[2]));
+
+  return new Date(
+    Number(parts[0]),
+    Number(parts[1])-1,
+    Number(parts[2])
+  );
 }
 
 function renderHarian(){
+  const input=document.getElementById("tanggalHarian");
+  if(!input)return;
+
   const tanggal=getTanggalHarian();
 
-  const namaHari=["Minggu","Senin","Selasa","Rabu","Kamis","Jumat","Sabtu"];
-  document.getElementById("namaHari").textContent=namaHari[tanggal.getDay()];
-  document.getElementById("tanggalHari").textContent=tanggal.toLocaleDateString("id-ID",{
-    day:"2-digit",month:"long",year:"numeric"
-  });
+  const namaHari=[
+    "Minggu","Senin","Selasa","Rabu",
+    "Kamis","Jumat","Sabtu"
+  ];
+
+  document.getElementById("namaHari").textContent=
+    namaHari[tanggal.getDay()];
+
+  document.getElementById("tanggalHari").textContent=
+    tanggal.toLocaleDateString("id-ID",{
+      day:"2-digit",
+      month:"long",
+      year:"numeric"
+    });
 
   const pengeluaran=data.riwayat.filter(t=>{
     if(t.jenis!=="keluar")return false;
+
     const d=new Date(t.timestamp);
+
     return d.getFullYear()===tanggal.getFullYear() &&
            d.getMonth()===tanggal.getMonth() &&
            d.getDate()===tanggal.getDate();
   });
 
-  const total=pengeluaran.reduce((sum,t)=>sum+Number(t.jumlah||0),0);
-  document.getElementById("pengeluaranHarian").textContent=rupiah(total);
+  const total=pengeluaran.reduce(
+    (sum,t)=>sum+Number(t.jumlah||0),0
+  );
+
+  document.getElementById("pengeluaranHarian").textContent=
+    rupiah(total);
 
   document.getElementById("jumlahTransaksiHarian").textContent=
     pengeluaran.length
@@ -747,29 +692,70 @@ function renderHarian(){
   const detail=document.getElementById("detailHarian");
 
   if(!pengeluaran.length){
-    detail.innerHTML='<div class="empty">Tidak ada pengeluaran pada hari ini.</div>';
-    return;
+    detail.innerHTML=
+      '<div class="empty">Tidak ada pengeluaran pada hari ini.</div>';
+    return
   }
 
-  pengeluaran.sort((a,b)=>new Date(b.timestamp)-new Date(a.timestamp));
+  pengeluaran.sort(
+    (a,b)=>new Date(b.timestamp)-new Date(a.timestamp)
+  );
 
   detail.innerHTML=pengeluaran.map(t=>{
     const d=new Date(t.timestamp);
+
     return `<div class="daily-item">
       <div>
         <b>${escapeHTML(t.keterangan)}</b>
-        <div class="muted">${d.toLocaleTimeString("id-ID",{hour:"2-digit",minute:"2-digit"})} WIB</div>
+        <div class="muted">
+          ${d.toLocaleTimeString("id-ID",{
+            hour:"2-digit",
+            minute:"2-digit"
+          })} WIB
+        </div>
       </div>
       <b class="minus">-${rupiah(t.jumlah)}</b>
-    </div>`;
-  }).join("");
+    </div>`
+  }).join("")
 }
 
 function ubahHari(jumlah){
   const tanggal=getTanggalHarian();
   tanggal.setDate(tanggal.getDate()+jumlah);
-  document.getElementById("tanggalHarian").value=formatTanggalInput(tanggal);
-  renderHarian();
+
+  document.getElementById("tanggalHarian").value=
+    formatTanggalInput(tanggal);
+
+  renderHarian()
+}
+
+/* =========================
+   GRAFIK PER HARI
+   ========================= */
+
+function loadChartJS(){
+  if(window.Chart){
+    chartReady=true;
+    document.getElementById("chartStatus").textContent="";
+    buatGrafik();
+    return
+  }
+
+  const s=document.createElement("script");
+  s.src="https://cdn.jsdelivr.net/npm/chart.js";
+
+  s.onload=()=>{
+    chartReady=true;
+    document.getElementById("chartStatus").textContent="";
+    buatGrafik()
+  };
+
+  s.onerror=()=>{
+    document.getElementById("chartStatus").textContent=
+      "Grafik membutuhkan koneksi internet."
+  };
+
+  document.head.appendChild(s)
 }
 
 function buatGrafik(){
@@ -784,28 +770,42 @@ function buatGrafik(){
     if(t.jenis!=="keluar")return;
 
     const d=new Date(t.timestamp);
-    const key=d.getFullYear()+"-"+
+
+    const key=
+      d.getFullYear()+"-"+
       String(d.getMonth()+1).padStart(2,"0")+"-"+
       String(d.getDate()).padStart(2,"0");
 
     if(!harian[key]){
       harian[key]={
-        tanggal:new Date(d.getFullYear(),d.getMonth(),d.getDate()),
+        tanggal:new Date(
+          d.getFullYear(),
+          d.getMonth(),
+          d.getDate()
+        ),
         total:0
-      };
+      }
     }
 
     harian[key].total+=Number(t.jumlah)||0;
   });
 
-  const daftar=Object.values(harian).sort((a,b)=>a.tanggal-b.tanggal);
+  const daftar=Object.values(harian)
+    .sort((a,b)=>a.tanggal-b.tanggal);
 
-  const namaHariSingkat=["Min","Sen","Sel","Rab","Kam","Jum","Sab"];
+  const namaHariSingkat=[
+    "Min","Sen","Sel","Rab",
+    "Kam","Jum","Sab"
+  ];
 
   const labels=daftar.map(item=>{
     const d=item.tanggal;
-    return namaHariSingkat[d.getDay()]+" "+d.getDate()+" "+
-      d.toLocaleDateString("id-ID",{month:"short"});
+
+    return namaHariSingkat[d.getDay()]+" "+
+      d.getDate()+" "+
+      d.toLocaleDateString("id-ID",{
+        month:"short"
+      });
   });
 
   const values=daftar.map(item=>item.total);
@@ -815,7 +815,7 @@ function buatGrafik(){
   if(!daftar.length){
     document.getElementById("chartStatus").textContent=
       "Belum ada data pengeluaran untuk dibuat grafik.";
-    return;
+    return
   }
 
   document.getElementById("chartStatus").textContent=
@@ -837,26 +837,353 @@ function buatGrafik(){
     options:{
       responsive:true,
       maintainAspectRatio:false,
-      plugins:{legend:{display:true}},
-      scales:{y:{ticks:{callback:v=>rupiah(v)}}}
+      plugins:{
+        legend:{display:true}
+      },
+      scales:{
+        y:{
+          ticks:{
+            callback:v=>rupiah(v)
+          }
+        }
+      }
     }
-  });
+  })
+}
+
+/* =========================
+   CLOUD / SUPABASE
+   ========================= */
+
+async function loadCloud(){
+  if(!supabaseClient||!currentUser)
+    throw new Error("Supabase belum siap");
+
+  const {data:settings,error:e1}=
+    await supabaseClient
+      .from("pengaturan")
+      .select("*")
+      .eq("user_id",currentUser.id)
+      .maybeSingle();
+
+  if(e1)throw e1;
+
+  const {data:txs,error:e2}=
+    await supabaseClient
+      .from("transaksi")
+      .select("*")
+      .eq("user_id",currentUser.id)
+      .order("timestamp",{ascending:true});
+
+  if(e2)throw e2;
+
+  data={
+    saldo:Number(settings?.saldo)||0,
+    tabungan:Number(settings?.tabungan)||0,
+    target:Number(settings?.target)||0,
+    riwayat:(txs||[]).map(t=>({
+      id:t.id,
+      jenis:t.jenis,
+      jumlah:Number(t.jumlah)||0,
+      keterangan:t.keterangan||"Tanpa keterangan",
+      timestamp:t.timestamp,
+      saldoSetelah:Number(t.saldo_setelah)||0,
+      tabunganSetelah:Number(t.tabungan_setelah)||0
+    }))
+  };
+
+  if(!settings)await simpanPengaturan();
+
+  updateTampilan();
+
+  document.getElementById("cloudStatus").textContent=
+    "☁️ Tersambung • data tersimpan di cloud";
+}
+
+async function maybeImportLocal(){
+  const raw=localStorage.getItem("money_archives_v4");
+  if(!raw||data.riwayat.length)return;
+
+  try{
+    const old=JSON.parse(raw);
+
+    if(!old||!Array.isArray(old.riwayat)||!old.riwayat.length)return;
+
+    if(!confirm("Ditemukan riwayat lama di perangkat ini. Impor ke Supabase sekarang?"))
+      return;
+
+    for(const t of old.riwayat){
+      await supabaseClient.from("transaksi").insert({
+        user_id:currentUser.id,
+        jenis:t.jenis,
+        jumlah:Number(t.jumlah)||0,
+        keterangan:t.keterangan||"Tanpa keterangan",
+        timestamp:t.timestamp||new Date().toISOString(),
+        saldo_setelah:Number(t.saldoSetelah)||0,
+        tabungan_setelah:Number(t.tabunganSetelah)||0
+      });
+    }
+
+    await supabaseClient.from("pengaturan").upsert({
+      user_id:currentUser.id,
+      saldo:Number(old.saldo)||0,
+      tabungan:Number(old.tabungan)||0,
+      target:Number(old.target)||0,
+      updated_at:new Date().toISOString()
+    });
+
+    await loadCloud();
+    toast("✅ Riwayat lama berhasil diimpor")
+  }catch(e){
+    toast("❌ Impor riwayat gagal")
+  }
+}
+
+async function pastikanSupabase(){
+  if(supabaseClient)return true;
+
+  setAuthMsg("⏳ Koneksi cloud sedang disiapkan...",true);
+
+  try{
+    if(!window.supabase){
+      try{
+        await loadExternalScript(
+          "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2",5000
+        )
+      }catch(e){
+        await loadExternalScript(
+          "https://unpkg.com/@supabase/supabase-js@2",5000
+        )
+      }
+    }
+
+    if(!window.supabase||
+       typeof window.supabase.createClient!=="function")
+      throw new Error("Library Supabase tidak tersedia");
+
+    supabaseClient=
+      window.supabase.createClient(
+        SUPABASE_URL,
+        SUPABASE_KEY
+      );
+
+    return true
+  }catch(e){
+    console.error(e);
+    setAuthMsg("❌ Koneksi Supabase gagal. Coba refresh halaman.");
+    return false
+  }
+}
+
+async function login(){
+  try{
+    const email=document.getElementById("email").value.trim();
+    const password=document.getElementById("password").value;
+
+    if(!email||!password){
+      setAuthMsg("Isi email dan password.");
+      return
+    }
+
+    if(!(await pastikanSupabase()))return;
+
+    setAuthMsg("⏳ Memproses login...",true);
+
+    const {data:r,error}=
+      await supabaseClient.auth.signInWithPassword({
+        email,password
+      });
+
+    if(error){
+      console.error(error);
+
+      const msg=(error.message||"").toLowerCase();
+
+      if(msg.includes("email not confirmed"))
+        setAuthMsg("❌ Email belum dikonfirmasi. Cek email konfirmasi dari Supabase.");
+      else if(msg.includes("invalid login credentials"))
+        setAuthMsg("❌ Email atau password salah.");
+      else
+        setAuthMsg("❌ Login gagal: "+(error.message||"kesalahan tidak diketahui"));
+
+      return
+    }
+
+    setAuthMsg("✅ Login berhasil. Membuka aplikasi...",true);
+
+    if(r&&r.user)await startUser(r.user)
+  }catch(e){
+    console.error(e);
+    setAuthMsg("❌ Error login: "+(e.message||e))
+  }
+}
+
+async function daftar(){
+  try{
+    const email=document.getElementById("email").value.trim();
+    const password=document.getElementById("password").value;
+
+    if(!email||password.length<6){
+      setAuthMsg("Email wajib diisi dan password minimal 6 karakter.");
+      return
+    }
+
+    if(!(await pastikanSupabase()))return;
+
+    setAuthMsg("⏳ Membuat akun...",true);
+
+    const {data:r,error}=
+      await supabaseClient.auth.signUp({
+        email,password
+      });
+
+    if(error){
+      console.error(error);
+      setAuthMsg("❌ Pendaftaran gagal: "+(error.message||"kesalahan tidak diketahui"));
+      return
+    }
+
+    if(!r.session)
+      setAuthMsg("✅ Akun dibuat. Cek email untuk konfirmasi, lalu masuk.",true);
+    else{
+      setAuthMsg("✅ Akun berhasil dibuat.",true);
+      if(r.user)await startUser(r.user)
+    }
+  }catch(e){
+    console.error(e);
+    setAuthMsg("❌ Error pendaftaran: "+(e.message||e))
+  }
+}
+
+async function logout(){
+  await supabaseClient.auth.signOut();
+  data={saldo:0,tabungan:0,target:0,riwayat:[]};
+  showAuth();
+  toast("Anda sudah keluar")
+}
+
+async function startUser(user){
+  currentUser=user;
+
+  const nama=(user.email||"Pengguna").split("@")[0];
+
+  document.getElementById("greeting").textContent=waktuSapaan();
+  document.getElementById("username").textContent=nama;
+
+  showApp();
+
+  try{
+    await loadCloud();
+    await maybeImportLocal()
+  }catch(e){
+    document.getElementById("cloudStatus").textContent=
+      "⚠️ Gagal memuat cloud";
+
+    toast("❌ Gagal memuat data Supabase")
+  }
+}
+
+function loadExternalScript(src,timeoutMs=8000){
+  return new Promise((resolve,reject)=>{
+    if(src.includes("supabase")&&window.supabase)return resolve();
+
+    const script=document.createElement("script");
+    let finished=false;
+
+    const done=(err)=>{
+      if(finished)return;
+
+      finished=true;
+      clearTimeout(timer);
+      script.onload=null;
+      script.onerror=null;
+
+      err?reject(err):resolve()
+    };
+
+    const timer=setTimeout(
+      ()=>done(new Error("Timeout memuat koneksi internet")),
+      timeoutMs
+    );
+
+    script.src=src;
+    script.async=true;
+    script.onload=()=>done();
+    script.onerror=()=>done(new Error("Gagal memuat library"));
+
+    document.head.appendChild(script)
+  })
+}
+
+async function mulai(){
+  showLoading(true);
+
+  if(SUPABASE_URL.includes("PASTE_")||
+     SUPABASE_KEY.includes("PASTE_")){
+    showAuth();
+    setAuthMsg("Isi SUPABASE_URL dan SUPABASE_KEY di file ini dulu.");
+    return
+  }
+
+  try{
+    try{
+      await loadExternalScript(
+        "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2",6000
+      )
+    }catch(firstErr){
+      await loadExternalScript(
+        "https://unpkg.com/@supabase/supabase-js@2",6000
+      )
+    }
+
+    if(!window.supabase||
+       typeof window.supabase.createClient!=="function")
+      throw new Error("Library Supabase tidak tersedia.");
+
+    supabaseClient=
+      window.supabase.createClient(
+        SUPABASE_URL,
+        SUPABASE_KEY
+      );
+
+    const {data:{session},error}=
+      await supabaseClient.auth.getSession();
+
+    if(error)throw error;
+
+    supabaseClient.auth.onAuthStateChange(
+      (event,newSession)=>{
+        if(event==="SIGNED_IN"&&newSession)
+          startUser(newSession.user);
+
+        if(event==="SIGNED_OUT"){
+          currentUser=null;
+          showAuth()
+        }
+      }
+    );
+
+    if(session)await startUser(session.user);
+    else showAuth()
+  }catch(e){
+    console.error(e);
+    showAuth();
+    setAuthMsg(
+      "⚠️ Supabase gagal dimuat. Periksa internet, Project URL, dan Publishable Key."
+    )
+  }
 }
 
 document.addEventListener("DOMContentLoaded",()=>{
   const input=document.getElementById("tanggalHarian");
-  if(input)input.value=formatTanggalInput(new Date());
+
+  if(input)
+    input.value=formatTanggalInput(new Date());
 
   loadChartJS();
   mulai();
 });
 </script>
-.menu-grid{
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:11px;
-}
+</body>
+</html>
 
-.menu-grid #mE{
-  grid-column:auto;
-}
