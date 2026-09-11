@@ -110,6 +110,12 @@ input:focus,select:focus{border-color:var(--pink)}
   .stats{gap:8px}
   .search-row{grid-template-columns:1fr}
 }
+    .monthly-chart-title,.monthly-list-title{font-size:18px;font-weight:700;margin:22px 0 10px}
+    #monthlyChartWrap{height:280px;position:relative;margin-bottom:10px}
+    .monthly-totals{display:flex;flex-direction:column;gap:8px}
+    .monthly-total-item{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px 14px;border:1px solid #e5e7eb;border-radius:10px;background:#fff}
+    .monthly-total-name{font-weight:600}
+    .monthly-total-value{font-weight:700;white-space:nowrap}
 </style>
 </head>
 <body>
@@ -219,6 +225,13 @@ setTimeout(function(){
         <h2>📈 Grafik Pengeluaran Harian</h2>
         <div id="chartStatus" class="chart-status">Menyiapkan grafik...</div>
         <div id="chartWrap"><canvas id="chart"></canvas></div>
+
+        <div class="monthly-chart-title">📊 Grafik Pengeluaran Per Bulan</div>
+        <div id="monthlyChartStatus" class="chart-status">Menyiapkan grafik bulanan...</div>
+        <div id="monthlyChartWrap"><canvas id="monthlyChart"></canvas></div>
+
+        <div class="monthly-list-title">📋 Total Pengeluaran Per Bulan</div>
+        <div id="monthlyTotals" class="monthly-totals"></div>
       </div>
     </section>
 
@@ -290,7 +303,7 @@ const SUPABASE_KEY = "sb_publishable_HDrPq5sqxx8Pwk8j2p3kuw_U7j4fz3s";
 
 let supabaseClient=null;
 let data={saldo:0,tabungan:0,target:0,riwayat:[]};
-let chart=null,chartReady=false,currentUser=null;
+let chart=null,monthlyChart=null,chartReady=false,currentUser=null;
 
 const namaBulan=["Januari","Februari","Maret","April","Mei","Juni","Juli","Agustus","September","Oktober","November","Desember"];
 
@@ -377,6 +390,11 @@ function bukaMenu(menu){
 function updateTampilan(){
   document.getElementById("saldo").textContent=rupiah(data.saldo);
   document.getElementById("tabungan").textContent=rupiah(data.tabungan);
+
+
+
+
+
 
   let masuk=0,keluar=0;
   data.riwayat.forEach(t=>{
@@ -592,8 +610,6 @@ function renderHistory(){
       last=key
     }
 
-
-
     const plus=["masuk","tabungan_keluar"].includes(t.jenis);
     const label={
       masuk:"Pemasukan",
@@ -760,95 +776,76 @@ function loadChartJS(){
 
 function buatGrafik(){
   if(!window.Chart)return;
-
   const canvas=document.getElementById("chart");
+  const monthlyCanvas=document.getElementById("monthlyChart");
   if(!canvas)return;
 
-  const harian={};
+  const harian={},bulanan={};
 
   data.riwayat.forEach(t=>{
     if(t.jenis!=="keluar")return;
-
     const d=new Date(t.timestamp);
+    const jumlah=Number(t.jumlah)||0;
 
-    const key=
-      d.getFullYear()+"-"+
-      String(d.getMonth()+1).padStart(2,"0")+"-"+
-      String(d.getDate()).padStart(2,"0");
+    const dailyKey=d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
+    if(!harian[dailyKey])harian[dailyKey]={tanggal:new Date(d.getFullYear(),d.getMonth(),d.getDate()),total:0};
+    harian[dailyKey].total+=jumlah;
 
-    if(!harian[key]){
-      harian[key]={
-        tanggal:new Date(
-          d.getFullYear(),
-          d.getMonth(),
-          d.getDate()
-        ),
-        total:0
-      }
-    }
-
-    harian[key].total+=Number(t.jumlah)||0;
+    const monthKey=d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0");
+    if(!bulanan[monthKey])bulanan[monthKey]={tanggal:new Date(d.getFullYear(),d.getMonth(),1),total:0};
+    bulanan[monthKey].total+=jumlah;
   });
 
-  const daftar=Object.values(harian)
-    .sort((a,b)=>a.tanggal-b.tanggal);
-
-  const namaHariSingkat=[
-    "Min","Sen","Sel","Rab",
-    "Kam","Jum","Sab"
-  ];
-
+  const daftar=Object.values(harian).sort((a,b)=>a.tanggal-b.tanggal);
+  const namaHariSingkat=["Min","Sen","Sel","Rab","Kam","Jum","Sab"];
   const labels=daftar.map(item=>{
     const d=item.tanggal;
-
-    return namaHariSingkat[d.getDay()]+" "+
-      d.getDate()+" "+
-      d.toLocaleDateString("id-ID",{
-        month:"short"
-      });
+    return namaHariSingkat[d.getDay()]+" "+d.getDate()+" "+d.toLocaleDateString("id-ID",{month:"short"});
   });
-
   const values=daftar.map(item=>item.total);
 
   if(chart)chart.destroy();
-
   if(!daftar.length){
-    document.getElementById("chartStatus").textContent=
-      "Belum ada data pengeluaran untuk dibuat grafik.";
-    return
+    document.getElementById("chartStatus").textContent="Belum ada data pengeluaran untuk dibuat grafik.";
+  }else{
+    document.getElementById("chartStatus").textContent="Total pengeluaran per hari";
+    chart=new Chart(canvas,{
+      type:"line",
+      data:{labels:labels,datasets:[{label:"Pengeluaran Harian",data:values,tension:.3,fill:false,borderWidth:2,pointRadius:4}]},
+      options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:true}},scales:{y:{ticks:{callback:v=>rupiah(v)}}}}
+    })
   }
 
-  document.getElementById("chartStatus").textContent=
-    "Total pengeluaran per hari";
+  const daftarBulanan=Object.values(bulanan).sort((a,b)=>a.tanggal-b.tanggal);
+  const labelsBulanan=daftarBulanan.map(item=>item.tanggal.toLocaleDateString("id-ID",{month:"short",year:"numeric"}));
+  const valuesBulanan=daftarBulanan.map(item=>item.total);
 
-  chart=new Chart(canvas,{
-    type:"line",
-    data:{
-      labels:labels,
-      datasets:[{
-        label:"Pengeluaran Harian",
-        data:values,
-        tension:.3,
-        fill:false,
-        borderWidth:2,
-        pointRadius:4
-      }]
-    },
-    options:{
-      responsive:true,
-      maintainAspectRatio:false,
-      plugins:{
-        legend:{display:true}
-      },
-      scales:{
-        y:{
-          ticks:{
-            callback:v=>rupiah(v)
-          }
-        }
-      }
+  if(monthlyChart)monthlyChart.destroy();
+  const monthlyStatus=document.getElementById("monthlyChartStatus");
+  if(monthlyCanvas&&monthlyStatus){
+    if(!daftarBulanan.length){
+      monthlyStatus.textContent="Belum ada data pengeluaran bulanan.";
+    }else{
+      monthlyStatus.textContent="Total pengeluaran yang dikelompokkan per bulan";
+      monthlyChart=new Chart(monthlyCanvas,{
+        type:"bar",
+        data:{labels:labelsBulanan,datasets:[{label:"Pengeluaran Bulanan",data:valuesBulanan,borderWidth:1}]},
+        options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:true}},scales:{y:{ticks:{callback:v=>rupiah(v)}}}}
+      })
     }
-  })
+  }
+
+  const monthlyTotals=document.getElementById("monthlyTotals");
+  if(monthlyTotals){
+    if(!daftarBulanan.length){
+      monthlyTotals.innerHTML='<div class="chart-status">Belum ada data pengeluaran.</div>';
+    }else{
+      monthlyTotals.innerHTML=daftarBulanan.slice().reverse().map(item=>{
+        const namaBulan=item.tanggal.toLocaleDateString("id-ID",{month:"long",year:"numeric"});
+        return `<div class="monthly-total-item"><span class="monthly-total-name">${namaBulan}</span><span class="monthly-total-value">${rupiah(item.total)}</span></div>`;
+      }).join("");
+    }
+  }
 }
 
 /* =========================
@@ -1186,4 +1183,3 @@ document.addEventListener("DOMContentLoaded",()=>{
 </script>
 </body>
 </html>
-
