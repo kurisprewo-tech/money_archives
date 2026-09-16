@@ -1382,6 +1382,52 @@ document.addEventListener("DOMContentLoaded",()=>{
   mulai();
   setInterval(cekNotifikasiTerjadwal,15000);
 });
+
+
+async function kirimNotifikasiAndroid(judul, pesan){
+  try{
+    if(!("Notification" in window)){
+      console.log("Browser tidak mendukung Notification API");
+      return;
+    }
+
+    if(Notification.permission === "default"){
+      await Notification.requestPermission();
+    }
+
+    if(Notification.permission !== "granted"){
+      console.log("Izin notifikasi ditolak");
+      return;
+    }
+
+    new Notification(judul,{
+      body: pesan,
+      icon: "icon.png",
+      tag: "money-archives"
+    });
+
+  }catch(e){
+    console.error("Notifikasi gagal:",e);
+  }
+}
+if(
+  data.notifikasiAktif &&
+  data.waktuNotifikasi === waktuSekarang &&
+  data.notifikasiTerakhir !== tanggalHariIni
+){
+  data.notifikasiTerakhir = tanggalHariIni;
+
+  simpanData();
+
+  kirimNotifikasiAndroid(
+    "Money Archives",
+    "Saatnya mencatat keuangan hari ini 💰"
+  );
+
+  toast("🔔 Saatnya mencatat keuangan hari ini");
+}
+
+
 </script>
 </body>
 </html>
