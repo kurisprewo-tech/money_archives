@@ -1438,149 +1438,118 @@ function kirimNotifikasiAndroid(){
         Android.kirimNotifikasi();
     }
 }
-<!-- =====================================================
-     FITUR BANK & E-WALLET
-     Tempel sebelum </body>
-===================================================== -->
+<!-- 
+
+
+</script>
+<!-- ================================
+     TAMBAHAN BANK & E-WALLET
+     MONEY ARCHIVES
+     ================================ -->
 
 <style>
-.bank-wallet-box{
-  background:#fff;
-  border-radius:19px;
-  margin:14px;
-  padding:17px;
-  box-shadow:0 3px 12px rgba(0,0,0,.06);
-}
+  .bank-wallet-box {
+    margin-top: 18px;
+    padding: 16px;
+    border-radius: 16px;
+    background: #fff;
+    box-shadow: 0 4px 15px rgba(0,0,0,.08);
+  }
 
-.bank-wallet-title{
-  font-size:20px;
-  font-weight:800;
-  margin-bottom:14px;
-}
+  .bank-wallet-title {
+    font-size: 20px;
+    font-weight: 700;
+    margin-bottom: 5px;
+  }
 
-.bank-total{
-  background:#fafafa;
-  border-radius:14px;
-  padding:14px;
-  margin-bottom:14px;
-}
+  .bank-wallet-total {
+    font-size: 25px;
+    font-weight: 800;
+    margin: 10px 0 15px;
+  }
 
-.bank-total-label{
-  color:#777;
-  font-size:13px;
-}
+  .bank-wallet-item {
+    padding: 13px;
+    margin-top: 10px;
+    border-radius: 12px;
+    background: #f8f8f8;
+  }
 
-.bank-total-value{
-  font-size:25px;
-  font-weight:800;
-  margin-top:5px;
-  color:#159447;
-}
+  .bank-wallet-name {
+    font-weight: 700;
+    font-size: 16px;
+  }
 
-.bank-item{
-  background:#fafafa;
-  border-radius:14px;
-  padding:14px;
-  margin-bottom:10px;
-}
+  .bank-wallet-type {
+    font-size: 12px;
+    opacity: .65;
+    margin-top: 2px;
+  }
 
-.bank-item-top{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  gap:10px;
-}
+  .bank-wallet-saldo {
+    font-size: 18px;
+    font-weight: 700;
+    margin-top: 6px;
+  }
 
-.bank-name{
-  font-weight:800;
-  font-size:16px;
-}
+  .bank-wallet-actions {
+    display: flex;
+    gap: 7px;
+    margin-top: 9px;
+  }
 
-.bank-type{
-  color:#777;
-  font-size:12px;
-  margin-top:3px;
-}
+  .bank-wallet-actions button {
+    flex: 1;
+    padding: 8px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+  }
 
-.bank-balance{
-  font-size:17px;
-  font-weight:800;
-  color:#159447;
-  text-align:right;
-}
+  .bw-edit {
+    background: #eee;
+  }
 
-.bank-actions{
-  display:flex;
-  gap:7px;
-  margin-top:11px;
-}
+  .bw-delete {
+    background: #ffdede;
+  }
 
-.bank-actions button{
-  border:0;
-  border-radius:10px;
-  padding:9px 11px;
-  font-weight:700;
-}
+  .bw-form {
+    display: none;
+    margin-top: 15px;
+    padding-top: 15px;
+    border-top: 1px solid #eee;
+  }
 
-.bank-add{
-  width:100%;
-  border:0;
-  border-radius:12px;
-  background:#f5004f;
-  color:#fff;
-  padding:13px;
-  font-weight:800;
-  margin-top:5px;
-}
+  .bw-form input,
+  .bw-form select {
+    width: 100%;
+    box-sizing: border-box;
+    margin-top: 7px;
+    margin-bottom: 10px;
+    padding: 11px;
+    border-radius: 9px;
+    border: 1px solid #ddd;
+  }
 
-.bank-input{
-  width:100%;
-  padding:12px 13px;
-  border:1px solid #ddd;
-  border-radius:12px;
-  margin-bottom:9px;
-  outline:none;
-}
+  .bw-add {
+    width: 100%;
+    border: none;
+    padding: 11px;
+    border-radius: 10px;
+    background: #f5004f;
+    color: white;
+    font-weight: 700;
+    cursor: pointer;
+  }
 
-.bank-input:focus{
-  border-color:#f5004f;
-}
-
-.bank-select{
-  width:100%;
-  padding:12px 13px;
-  border:1px solid #ddd;
-  border-radius:12px;
-  margin-bottom:9px;
-  background:#fff;
-}
-
-.bank-form{
-  display:none;
-  margin-top:14px;
-}
-
-.bank-form.show{
-  display:block;
-}
-
-.bank-empty{
-  text-align:center;
-  color:#777;
-  padding:18px 5px;
-  font-size:13px;
-}
-
-.bank-grand-total{
-  margin-top:12px;
-  padding-top:12px;
-  border-top:1px solid #eee;
-  display:flex;
-  justify-content:space-between;
-  font-weight:800;
-}
+  .bw-empty {
+    text-align: center;
+    padding: 15px 5px;
+    opacity: .6;
+    font-size: 14px;
+  }
 </style>
-
 
 <div class="bank-wallet-box">
 
@@ -1588,244 +1557,327 @@ function kirimNotifikasiAndroid(){
     🏦 Bank & E-Wallet
   </div>
 
-  <div class="bank-total">
-
-    <div class="bank-total-label">
-      Total Bank / E-Wallet
-    </div>
-
-    <div
-      id="bankWalletTotal"
-      class="bank-total-value">
-      Rp0
-    </div>
-
+  <div style="font-size:13px;opacity:.65;">
+    Saldo uang yang tersimpan di bank atau e-wallet
   </div>
 
+  <div class="bank-wallet-total" id="bwTotal">
+    Rp0
+  </div>
 
-  <div id="bankWalletList"></div>
-
-
-  <button
-    class="bank-add"
-    onclick="bankWalletBukaForm()">
-
-    ➕ Tambah Bank / E-Wallet
-
+  <button class="bw-add" onclick="BW_openForm()">
+    ＋ Tambah Bank / E-Wallet
   </button>
 
+  <div class="bw-form" id="bwForm">
 
-  <div
-    id="bankWalletForm"
-    class="bank-form">
+    <label>Jenis</label>
 
-    <select
-      id="bankWalletType"
-      class="bank-select">
-
+    <select id="bwType">
       <option value="Bank">🏦 Bank</option>
       <option value="E-Wallet">📱 E-Wallet</option>
-
     </select>
 
+    <label>Nama</label>
 
     <input
-      id="bankWalletName"
-      class="bank-input"
-      placeholder="Nama, contoh: BRI / SeaBank / DANA">
+      id="bwName"
+      type="text"
+      placeholder="Contoh: BRI / SeaBank / DANA"
+    >
 
+    <label>Saldo</label>
 
     <input
-      id="bankWalletSaldo"
-      class="bank-input"
-      inputmode="numeric"
-      placeholder="Saldo, contoh: 500000">
+      id="bwSaldo"
+      type="text"
+      inputmode="text"
+      placeholder="Contoh: 100rb"
+    >
 
-
-    <button
-      class="bank-add"
-      onclick="bankWalletTambah()">
-
-      💾 Simpan
-
+    <button class="bw-add" onclick="BW_save()">
+      Simpan
     </button>
 
   </div>
 
-
-  <div class="bank-grand-total">
-
-    <span>
-      💰 Total Penyimpanan
-    </span>
-
-    <span id="bankWalletGrandTotal">
-      Rp0
-    </span>
-
-  </div>
+  <div id="bwList"></div>
 
 </div>
 
-
 <script>
-
 (function(){
 
   /*
-   * Data Bank & E-Wallet
-   * Disimpan terpisah dari fitur Tabungan lama.
+   * DATA BANK & E-WALLET
+   * Disimpan terpisah dari sistem utama Money Archives.
    */
 
-  let bankWalletData =
-    JSON.parse(
-      localStorage.getItem("moneyArchivesBankWallet")
-    ) || [];
+  const BW_STORAGE = "money_archives_bank_wallet_v1";
 
+  function BW_getData(){
+    try {
+      const data = localStorage.getItem(BW_STORAGE);
 
-  function rupiahBank(n){
+      if(!data) return [];
 
-    return new Intl.NumberFormat(
-      "id-ID",
-      {
-        style:"currency",
-        currency:"IDR",
-        maximumFractionDigits:0
-      }
-    ).format(Number(n) || 0);
+      const parsed = JSON.parse(data);
+
+      return Array.isArray(parsed) ? parsed : [];
+
+    } catch(e) {
+      return [];
+    }
+  }
+
+  function BW_saveData(data){
+    try {
+      localStorage.setItem(
+        BW_STORAGE,
+        JSON.stringify(data)
+      );
+    } catch(e) {
+      alert("Data Bank/E-Wallet gagal disimpan.");
+    }
+  }
+
+  function BW_rupiah(angka){
+
+    angka = Number(angka) || 0;
+
+    return "Rp" + angka.toLocaleString("id-ID");
 
   }
 
+  function BW_parseNominal(value){
 
-  function simpanBankWallet(){
+    if(!value) return 0;
 
-    localStorage.setItem(
-      "moneyArchivesBankWallet",
-      JSON.stringify(bankWalletData)
-    );
+    let text = String(value)
+      .toLowerCase()
+      .replace(/\s/g,"")
+      .replace(/rp/g,"")
+      .replace(/\./g,"");
 
+    if(text.endsWith("jt")){
+      return parseFloat(text) * 1000000;
+    }
+
+    if(text.endsWith("juta")){
+      return parseFloat(text) * 1000000;
+    }
+
+    if(text.endsWith("rb")){
+      return parseFloat(text) * 1000;
+    }
+
+    if(text.endsWith("ribu")){
+      return parseFloat(text) * 1000;
+    }
+
+    return Number(
+      text.replace(/[^0-9]/g,"")
+    ) || 0;
   }
 
+  window.BW_openForm = function(){
 
-  function renderBankWallet(){
+    const form = document.getElementById("bwForm");
 
-    const list =
-      document.getElementById("bankWalletList");
+    if(!form) return;
 
-    const total =
-      document.getElementById("bankWalletTotal");
+    form.style.display =
+      form.style.display === "block"
+      ? "none"
+      : "block";
 
-    const grand =
-      document.getElementById("bankWalletGrandTotal");
+  };
 
+  window.BW_save = function(){
 
-    if(!list) return;
+    const type =
+      document.getElementById("bwType").value;
 
+    const name =
+      document.getElementById("bwName").value.trim();
 
-    list.innerHTML = "";
+    const saldo =
+      BW_parseNominal(
+        document.getElementById("bwSaldo").value
+      );
 
+    if(!name){
 
-    let jumlah = 0;
+      alert("Nama Bank/E-Wallet belum diisi.");
 
-
-    if(bankWalletData.length === 0){
-
-      list.innerHTML = `
-        <div class="bank-empty">
-          Belum ada Bank atau E-Wallet.
-        </div>
-      `;
+      return;
 
     }
 
+    if(saldo < 0){
 
-    bankWalletData.forEach(function(item,index){
+      alert("Saldo tidak boleh negatif.");
 
-      jumlah += Number(item.saldo) || 0;
+      return;
 
+    }
 
-      const div =
-        document.createElement("div");
+    const data = BW_getData();
 
+    data.push({
 
-      div.className = "bank-item";
+      id: Date.now(),
 
+      type: type,
 
-      div.innerHTML = `
+      name: name,
 
-        <div class="bank-item-top">
-
-          <div>
-
-            <div class="bank-name">
-              ${escapeBankHTML(item.nama)}
-            </div>
-
-            <div class="bank-type">
-              ${escapeBankHTML(item.type)}
-            </div>
-
-          </div>
-
-
-          <div class="bank-balance">
-            ${rupiahBank(item.saldo)}
-          </div>
-
-        </div>
-
-
-        <div class="bank-actions">
-
-          <button
-            style="background:#f0f0f0"
-            onclick="bankWalletUbah(${index})">
-
-            ✏️ Ubah
-
-          </button>
-
-
-          <button
-            style="background:#ffe9e9;color:#e53935"
-            onclick="bankWalletHapus(${index})">
-
-            🗑️ Hapus
-
-          </button>
-
-        </div>
-
-      `;
-
-
-      list.appendChild(div);
+      saldo: saldo
 
     });
 
+    BW_saveData(data);
 
-    total.textContent =
-      rupiahBank(jumlah);
+    document.getElementById("bwName").value = "";
 
+    document.getElementById("bwSaldo").value = "";
 
-    /*
-     * Total Penyimpanan:
-     *
-     * Untuk sementara hanya menampilkan
-     * total Bank + E-Wallet.
-     *
-     * Tabungan lama tidak disentuh.
-     */
+    document.getElementById("bwForm").style.display = "none";
 
-    grand.textContent =
-      rupiahBank(jumlah);
+    BW_render();
+
+  };
+
+  window.BW_delete = function(id){
+
+    if(!confirm("Hapus Bank/E-Wallet ini?")) return;
+
+    let data = BW_getData();
+
+    data = data.filter(item => item.id !== id);
+
+    BW_saveData(data);
+
+    BW_render();
+
+  };
+
+  window.BW_edit = function(id){
+
+    const data = BW_getData();
+
+    const item =
+      data.find(x => x.id === id);
+
+    if(!item) return;
+
+    const namaBaru =
+      prompt("Nama Bank/E-Wallet:", item.name);
+
+    if(namaBaru === null) return;
+
+    const saldoBaru =
+      prompt(
+        "Saldo:",
+        item.saldo
+      );
+
+    if(saldoBaru === null) return;
+
+    const saldo =
+      BW_parseNominal(saldoBaru);
+
+    item.name =
+      namaBaru.trim() || item.name;
+
+    item.saldo =
+      saldo;
+
+    BW_saveData(data);
+
+    BW_render();
+
+  };
+
+  function BW_render(){
+
+    const data = BW_getData();
+
+    const list =
+      document.getElementById("bwList");
+
+    const totalElement =
+      document.getElementById("bwTotal");
+
+    if(!list || !totalElement) return;
+
+    let total = 0;
+
+    data.forEach(item => {
+
+      total += Number(item.saldo) || 0;
+
+    });
+
+    totalElement.textContent =
+      BW_rupiah(total);
+
+    if(data.length === 0){
+
+      list.innerHTML =
+        '<div class="bw-empty">' +
+        'Belum ada Bank / E-Wallet' +
+        '</div>';
+
+      return;
+
+    }
+
+    list.innerHTML = data.map(item => {
+
+      return `
+        <div class="bank-wallet-item">
+
+          <div class="bank-wallet-name">
+            ${BW_escape(item.name)}
+          </div>
+
+          <div class="bank-wallet-type">
+            ${item.type === "Bank"
+              ? "🏦 Bank"
+              : "📱 E-Wallet"}
+          </div>
+
+          <div class="bank-wallet-saldo">
+            ${BW_rupiah(item.saldo)}
+          </div>
+
+          <div class="bank-wallet-actions">
+
+            <button
+              class="bw-edit"
+              onclick="BW_edit(${item.id})">
+              ✏️ Edit
+            </button>
+
+            <button
+              class="bw-delete"
+              onclick="BW_delete(${item.id})">
+              🗑️ Hapus
+            </button>
+
+          </div>
+
+        </div>
+      `;
+
+    }).join("");
 
   }
 
+  function BW_escape(text){
 
-  function escapeBankHTML(text){
-
-    return String(text || "")
+    return String(text)
       .replace(/&/g,"&amp;")
       .replace(/</g,"&lt;")
       .replace(/>/g,"&gt;")
@@ -1834,197 +1886,25 @@ function kirimNotifikasiAndroid(){
 
   }
 
-
-  window.bankWalletBukaForm =
-    function(){
-
-      const form =
-        document.getElementById("bankWalletForm");
-
-      form.classList.toggle("show");
-
-    };
-
-
-  window.bankWalletTambah =
-    function(){
-
-      const type =
-        document.getElementById(
-          "bankWalletType"
-        ).value;
-
-
-      const nama =
-        document.getElementById(
-          "bankWalletName"
-        ).value.trim();
-
-
-      const saldo =
-        Number(
-          document.getElementById(
-            "bankWalletSaldo"
-          ).value.replace(/\D/g,"")
-        );
-
-
-      if(!nama){
-
-        alert("Nama Bank / E-Wallet belum diisi.");
-
-        return;
-
-      }
-
-
-      if(!Number.isFinite(saldo) || saldo < 0){
-
-        alert("Saldo tidak valid.");
-
-        return;
-
-      }
-
-
-      bankWalletData.push({
-
-        type:type,
-
-        nama:nama,
-
-        saldo:saldo
-
-      });
-
-
-      simpanBankWallet();
-
-      renderBankWallet();
-
-
-      document.getElementById(
-        "bankWalletName"
-      ).value = "";
-
-
-      document.getElementById(
-        "bankWalletSaldo"
-      ).value = "";
-
-
-      document.getElementById(
-        "bankWalletForm"
-      ).classList.remove("show");
-
-
-      alert(
-        "Bank / E-Wallet berhasil ditambahkan."
-      );
-
-    };
-
-
-  window.bankWalletUbah =
-    function(index){
-
-      const item =
-        bankWalletData[index];
-
-
-      if(!item) return;
-
-
-      const saldoBaru =
-        prompt(
-          "Masukkan saldo baru untuk " +
-          item.nama,
-          item.saldo
-        );
-
-
-      if(saldoBaru === null) return;
-
-
-      const saldo =
-        Number(
-          saldoBaru.replace(/\D/g,"")
-        );
-
-
-      if(!Number.isFinite(saldo) || saldo < 0){
-
-        alert("Saldo tidak valid.");
-
-        return;
-
-      }
-
-
-      item.saldo = saldo;
-
-
-      simpanBankWallet();
-
-      renderBankWallet();
-
-    };
-
-
-  window.bankWalletHapus =
-    function(index){
-
-      const item =
-        bankWalletData[index];
-
-
-      if(!item) return;
-
-
-      if(
-        !confirm(
-          "Hapus " +
-          item.nama +
-          " dari daftar?"
-        )
-      ){
-
-        return;
-
-      }
-
-
-      bankWalletData.splice(index,1);
-
-
-      simpanBankWallet();
-
-      renderBankWallet();
-
-    };
-
-
   /*
-   * Jalankan saat halaman selesai dimuat.
+   * Jalankan setelah halaman selesai dimuat.
+   * Tidak menyentuh login atau Supabase.
    */
 
-  if(
-    document.readyState === "loading"
-  ){
+  if(document.readyState === "loading"){
 
     document.addEventListener(
       "DOMContentLoaded",
-      renderBankWallet
+      BW_render
     );
 
   }else{
 
-    renderBankWallet();
+    BW_render();
 
   }
 
 })();
-
 </script>
 </body>
 </html>
