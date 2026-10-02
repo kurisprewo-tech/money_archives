@@ -1439,6 +1439,173 @@ function kirimNotifikasiAndroid(){
     }
 }
 
+<div class="card">
+  <h2>💰 Tabungan</h2>
+
+  <!-- TOTAL TABUNGAN -->
+  <div class="stat">
+    <span class="label">Total Semua Tabungan</span>
+    <div id="totalSemuaTabungan" class="big-stat">Rp0</div>
+  </div>
+
+  <!-- TABUNGAN CASH -->
+  <div class="stat" style="margin-top:10px">
+    <span class="label">💵 Tabungan Cash</span>
+    <div id="tabunganCash" class="big-stat">Rp0</div>
+  </div>
+
+  <!-- BANK / E-WALLET -->
+  <div class="stat" style="margin-top:10px">
+    <span class="label">🏦 Bank / E-Wallet</span>
+    <div id="tabunganDigital" class="big-stat">Rp0</div>
+  </div>
+</div>
+
+
+<!-- TAMBAH TABUNGAN -->
+<div class="card">
+  <h2>➕ Tambah Tabungan</h2>
+
+  <label>Tempat Penyimpanan</label>
+
+  <select id="jenisPenyimpanan" onchange="ubahJenisPenyimpanan()">
+    <option value="cash">💵 Cash</option>
+    <option value="bank">🏦 Bank</option>
+    <option value="ewallet">📱 E-Wallet</option>
+  </select>
+
+  <!-- Nama bank / e-wallet -->
+  <div id="namaPenyimpananBox" class="hidden">
+
+    <label>Nama Bank / E-Wallet</label>
+
+    <input
+      id="namaPenyimpanan"
+      placeholder="Contoh: BRI, BNI, SeaBank, DANA"
+    >
+
+  </div>
+
+  <label>Jenis Transaksi</label>
+
+  <select id="jenisTabungan">
+    <option value="tabungan_masuk">
+      ➕ Masukkan ke Tabungan
+    </option>
+
+    <option value="tabungan_keluar">
+      ↩️ Ambil dari Tabungan
+    </option>
+  </select>
+
+  <label>Nominal</label>
+
+  <input
+    id="nominalTabungan"
+    inputmode="text"
+    placeholder="Contoh: 50rb, 100rb, 1jt"
+  >
+
+  <label>Keterangan</label>
+
+  <input
+    id="keteranganTabungan"
+    placeholder="Contoh: Nabung mingguan..."
+  >
+
+  <button
+    class="primary"
+    onclick="tambahTabungan()"
+  >
+    💾 Simpan Tabungan
+  </button>
+</div/>
+function tambahTabungan(){
+
+  const tempat =
+    document.getElementById("jenisPenyimpanan").value;
+
+  const jenis =
+    document.getElementById("jenisTabungan").value;
+
+  const nominalInput =
+    document.getElementById("nominalTabungan").value;
+
+  const nominal =
+    parseNominal(nominalInput);
+
+  const keterangan =
+    document.getElementById("keteranganTabungan").value.trim();
+
+  if(!Number.isFinite(nominal) || nominal <= 0){
+    toast("Nominal tabungan tidak valid.");
+    return;
+  }
+
+  // =========================
+  // CASH
+  // =========================
+
+  if(tempat === "cash"){
+
+    if(jenis === "tabungan_masuk"){
+
+      tabunganCash += nominal;
+
+    }else{
+
+      if(nominal > tabunganCash){
+        toast("Saldo tabungan cash tidak cukup.");
+        return;
+      }
+
+      tabunganCash -= nominal;
+    }
+  }
+
+
+  // =========================
+  // BANK / E-WALLET
+  // =========================
+
+  else{
+
+    const nama =
+      document.getElementById("namaPenyimpanan")
+      .value.trim();
+
+    if(!nama){
+      toast("Masukkan nama bank atau e-wallet.");
+      return;
+    }
+
+    if(jenis === "tabungan_masuk"){
+
+      tabunganDigital += nominal;
+
+    }else{
+
+      if(nominal > tabunganDigital){
+        toast("Saldo bank/e-wallet tidak cukup.");
+        return;
+      }
+
+      tabunganDigital -= nominal;
+    }
+  }
+
+
+  data.tabungan =
+    tabunganCash + tabunganDigital;
+
+
+  renderTabungan();
+
+  toast("Tabungan berhasil diperbarui.");
+
+  document.getElementById("nominalTabungan").value = "";
+  document.getElementById("keteranganTabungan").value = "";
+}
 </script>
 </body>
 </html>
