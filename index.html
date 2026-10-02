@@ -1442,114 +1442,140 @@ function kirimNotifikasiAndroid(){
 
 
 </script>
-<!-- ================================
-     TAMBAHAN BANK & E-WALLET
+
+<!-- =========================================
      MONEY ARCHIVES
-     ================================ -->
+     BANK / E-WALLET + WALLPAPER
+     ========================================= -->
 
 <style>
-  .bank-wallet-box {
-    margin-top: 18px;
-    padding: 16px;
-    border-radius: 16px;
-    background: #fff;
-    box-shadow: 0 4px 15px rgba(0,0,0,.08);
-  }
 
-  .bank-wallet-title {
-    font-size: 20px;
-    font-weight: 700;
-    margin-bottom: 5px;
-  }
+/* ===== WALLPAPER MONEY ARCHIVES ===== */
 
-  .bank-wallet-total {
-    font-size: 25px;
-    font-weight: 800;
-    margin: 10px 0 15px;
-  }
+body{
+  background-image:
+    linear-gradient(
+      rgba(255,255,255,0.72),
+      rgba(255,255,255,0.72)
+    ),
+    url("wallpaper.jpg");
 
-  .bank-wallet-item {
-    padding: 13px;
-    margin-top: 10px;
-    border-radius: 12px;
-    background: #f8f8f8;
-  }
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
+  background-repeat: no-repeat;
+}
 
-  .bank-wallet-name {
-    font-weight: 700;
-    font-size: 16px;
-  }
 
-  .bank-wallet-type {
-    font-size: 12px;
-    opacity: .65;
-    margin-top: 2px;
-  }
+/* ===== BANK & E-WALLET ===== */
 
-  .bank-wallet-saldo {
-    font-size: 18px;
-    font-weight: 700;
-    margin-top: 6px;
-  }
+.bank-wallet-box{
+  margin:18px 0;
+  padding:16px;
+  border-radius:16px;
+  background:rgba(255,255,255,0.94);
+  box-shadow:0 4px 15px rgba(0,0,0,.08);
+  backdrop-filter:blur(5px);
+}
 
-  .bank-wallet-actions {
-    display: flex;
-    gap: 7px;
-    margin-top: 9px;
-  }
+.bank-wallet-title{
+  font-size:20px;
+  font-weight:700;
+  margin-bottom:5px;
+}
 
-  .bank-wallet-actions button {
-    flex: 1;
-    padding: 8px;
-    border: none;
-    border-radius: 8px;
-    cursor: pointer;
-  }
+.bank-wallet-total{
+  font-size:25px;
+  font-weight:800;
+  margin:10px 0 15px;
+}
 
-  .bw-edit {
-    background: #eee;
-  }
+.bank-wallet-item{
+  padding:13px;
+  margin-top:10px;
+  border-radius:12px;
+  background:rgba(248,248,248,.95);
+}
 
-  .bw-delete {
-    background: #ffdede;
-  }
+.bank-wallet-name{
+  font-weight:700;
+  font-size:16px;
+}
 
-  .bw-form {
-    display: none;
-    margin-top: 15px;
-    padding-top: 15px;
-    border-top: 1px solid #eee;
-  }
+.bank-wallet-type{
+  font-size:12px;
+  opacity:.65;
+  margin-top:2px;
+}
 
-  .bw-form input,
-  .bw-form select {
-    width: 100%;
-    box-sizing: border-box;
-    margin-top: 7px;
-    margin-bottom: 10px;
-    padding: 11px;
-    border-radius: 9px;
-    border: 1px solid #ddd;
-  }
+.bank-wallet-saldo{
+  font-size:18px;
+  font-weight:700;
+  margin-top:6px;
+}
 
-  .bw-add {
-    width: 100%;
-    border: none;
-    padding: 11px;
-    border-radius: 10px;
-    background: #f5004f;
-    color: white;
-    font-weight: 700;
-    cursor: pointer;
-  }
+.bank-wallet-actions{
+  display:flex;
+  gap:7px;
+  margin-top:9px;
+}
 
-  .bw-empty {
-    text-align: center;
-    padding: 15px 5px;
-    opacity: .6;
-    font-size: 14px;
-  }
+.bank-wallet-actions button{
+  flex:1;
+  padding:8px;
+  border:none;
+  border-radius:8px;
+  cursor:pointer;
+}
+
+.bw-edit{
+  background:#eee;
+}
+
+.bw-delete{
+  background:#ffdede;
+}
+
+.bw-form{
+  display:none;
+  margin-top:15px;
+  padding-top:15px;
+  border-top:1px solid #eee;
+}
+
+.bw-form input,
+.bw-form select{
+  width:100%;
+  box-sizing:border-box;
+  margin-top:7px;
+  margin-bottom:10px;
+  padding:11px;
+  border-radius:9px;
+  border:1px solid #ddd;
+}
+
+.bw-add{
+  width:100%;
+  border:none;
+  padding:11px;
+  border-radius:10px;
+  background:#f5004f;
+  color:white;
+  font-weight:700;
+  cursor:pointer;
+}
+
+.bw-empty{
+  text-align:center;
+  padding:15px 5px;
+  opacity:.6;
+  font-size:14px;
+}
+
 </style>
+
+
+<!-- ===== BANK & E-WALLET ===== -->
 
 <div class="bank-wallet-box">
 
@@ -1569,6 +1595,7 @@ function kirimNotifikasiAndroid(){
     ＋ Tambah Bank / E-Wallet
   </button>
 
+
   <div class="bw-form" id="bwForm">
 
     <label>Jenis</label>
@@ -1578,6 +1605,7 @@ function kirimNotifikasiAndroid(){
       <option value="E-Wallet">📱 E-Wallet</option>
     </select>
 
+
     <label>Nama</label>
 
     <input
@@ -1585,6 +1613,7 @@ function kirimNotifikasiAndroid(){
       type="text"
       placeholder="Contoh: BRI / SeaBank / DANA"
     >
+
 
     <label>Saldo</label>
 
@@ -1595,186 +1624,276 @@ function kirimNotifikasiAndroid(){
       placeholder="Contoh: 100rb"
     >
 
+
     <button class="bw-add" onclick="BW_save()">
       Simpan
     </button>
 
   </div>
 
+
   <div id="bwList"></div>
 
 </div>
 
+
 <script>
+
 (function(){
 
-  /*
-   * DATA BANK & E-WALLET
-   * Disimpan terpisah dari sistem utama Money Archives.
-   */
+  const BW_STORAGE =
+    "money_archives_bank_wallet_v1";
 
-  const BW_STORAGE = "money_archives_bank_wallet_v1";
 
   function BW_getData(){
-    try {
-      const data = localStorage.getItem(BW_STORAGE);
+
+    try{
+
+      const data =
+        localStorage.getItem(BW_STORAGE);
 
       if(!data) return [];
 
-      const parsed = JSON.parse(data);
+      const parsed =
+        JSON.parse(data);
 
-      return Array.isArray(parsed) ? parsed : [];
+      return Array.isArray(parsed)
+        ? parsed
+        : [];
 
-    } catch(e) {
+    }catch(e){
+
       return [];
+
     }
+
   }
 
+
   function BW_saveData(data){
-    try {
+
+    try{
+
       localStorage.setItem(
         BW_STORAGE,
         JSON.stringify(data)
       );
-    } catch(e) {
-      alert("Data Bank/E-Wallet gagal disimpan.");
+
+    }catch(e){
+
+      alert(
+        "Data Bank/E-Wallet gagal disimpan."
+      );
+
     }
+
   }
+
 
   function BW_rupiah(angka){
 
     angka = Number(angka) || 0;
 
-    return "Rp" + angka.toLocaleString("id-ID");
+    return "Rp" +
+      angka.toLocaleString("id-ID");
 
   }
+
 
   function BW_parseNominal(value){
 
     if(!value) return 0;
 
-    let text = String(value)
-      .toLowerCase()
-      .replace(/\s/g,"")
-      .replace(/rp/g,"")
-      .replace(/\./g,"");
+    let text =
+      String(value)
+        .toLowerCase()
+        .replace(/\s/g,"")
+        .replace(/rp/g,"")
+        .replace(/\./g,"");
+
 
     if(text.endsWith("jt")){
+
       return parseFloat(text) * 1000000;
+
     }
+
 
     if(text.endsWith("juta")){
+
       return parseFloat(text) * 1000000;
+
     }
+
 
     if(text.endsWith("rb")){
+
       return parseFloat(text) * 1000;
+
     }
 
+
     if(text.endsWith("ribu")){
+
       return parseFloat(text) * 1000;
+
     }
+
 
     return Number(
       text.replace(/[^0-9]/g,"")
     ) || 0;
+
   }
+
 
   window.BW_openForm = function(){
 
-    const form = document.getElementById("bwForm");
+    const form =
+      document.getElementById("bwForm");
 
     if(!form) return;
 
+
     form.style.display =
       form.style.display === "block"
-      ? "none"
-      : "block";
+        ? "none"
+        : "block";
 
   };
+
 
   window.BW_save = function(){
 
     const type =
       document.getElementById("bwType").value;
 
+
     const name =
-      document.getElementById("bwName").value.trim();
+      document
+        .getElementById("bwName")
+        .value
+        .trim();
+
 
     const saldo =
       BW_parseNominal(
-        document.getElementById("bwSaldo").value
+        document
+          .getElementById("bwSaldo")
+          .value
       );
+
 
     if(!name){
 
-      alert("Nama Bank/E-Wallet belum diisi.");
+      alert(
+        "Nama Bank/E-Wallet belum diisi."
+      );
 
       return;
 
     }
+
 
     if(saldo < 0){
 
-      alert("Saldo tidak boleh negatif.");
+      alert(
+        "Saldo tidak boleh negatif."
+      );
 
       return;
 
     }
 
-    const data = BW_getData();
+
+    const data =
+      BW_getData();
+
 
     data.push({
 
-      id: Date.now(),
+      id:Date.now(),
 
-      type: type,
+      type:type,
 
-      name: name,
+      name:name,
 
-      saldo: saldo
+      saldo:saldo
 
     });
 
+
     BW_saveData(data);
 
-    document.getElementById("bwName").value = "";
 
-    document.getElementById("bwSaldo").value = "";
+    document.getElementById("bwName")
+      .value = "";
 
-    document.getElementById("bwForm").style.display = "none";
+
+    document.getElementById("bwSaldo")
+      .value = "";
+
+
+    document.getElementById("bwForm")
+      .style.display = "none";
+
 
     BW_render();
 
   };
+
 
   window.BW_delete = function(id){
 
-    if(!confirm("Hapus Bank/E-Wallet ini?")) return;
+    if(
+      !confirm(
+        "Hapus Bank/E-Wallet ini?"
+      )
+    ) return;
 
-    let data = BW_getData();
 
-    data = data.filter(item => item.id !== id);
+    let data =
+      BW_getData();
+
+
+    data =
+      data.filter(
+        item => item.id !== id
+      );
+
 
     BW_saveData(data);
+
 
     BW_render();
 
   };
 
+
   window.BW_edit = function(id){
 
-    const data = BW_getData();
+    const data =
+      BW_getData();
+
 
     const item =
-      data.find(x => x.id === id);
+      data.find(
+        x => x.id === id
+      );
+
 
     if(!item) return;
 
+
     const namaBaru =
-      prompt("Nama Bank/E-Wallet:", item.name);
+      prompt(
+        "Nama Bank/E-Wallet:",
+        item.name
+      );
+
 
     if(namaBaru === null) return;
+
 
     const saldoBaru =
       prompt(
@@ -1782,45 +1901,64 @@ function kirimNotifikasiAndroid(){
         item.saldo
       );
 
+
     if(saldoBaru === null) return;
 
-    const saldo =
-      BW_parseNominal(saldoBaru);
 
     item.name =
       namaBaru.trim() || item.name;
 
+
     item.saldo =
-      saldo;
+      BW_parseNominal(saldoBaru);
+
 
     BW_saveData(data);
+
 
     BW_render();
 
   };
 
+
   function BW_render(){
 
-    const data = BW_getData();
+    const data =
+      BW_getData();
+
 
     const list =
-      document.getElementById("bwList");
+      document.getElementById(
+        "bwList"
+      );
+
 
     const totalElement =
-      document.getElementById("bwTotal");
+      document.getElementById(
+        "bwTotal"
+      );
 
-    if(!list || !totalElement) return;
+
+    if(
+      !list ||
+      !totalElement
+    ) return;
+
 
     let total = 0;
 
+
     data.forEach(item => {
 
-      total += Number(item.saldo) || 0;
+      total +=
+        Number(item.saldo) || 0;
 
     });
 
+
     totalElement.textContent =
       BW_rupiah(total);
+
 
     if(data.length === 0){
 
@@ -1833,65 +1971,86 @@ function kirimNotifikasiAndroid(){
 
     }
 
-    list.innerHTML = data.map(item => {
 
-      return `
-        <div class="bank-wallet-item">
+    list.innerHTML =
+      data.map(item => {
 
-          <div class="bank-wallet-name">
-            ${BW_escape(item.name)}
+        return `
+
+          <div class="bank-wallet-item">
+
+            <div class="bank-wallet-name">
+              ${BW_escape(item.name)}
+            </div>
+
+            <div class="bank-wallet-type">
+
+              ${
+                item.type === "Bank"
+                ? "🏦 Bank"
+                : "📱 E-Wallet"
+              }
+
+            </div>
+
+            <div class="bank-wallet-saldo">
+
+              ${BW_rupiah(item.saldo)}
+
+            </div>
+
+
+            <div class="bank-wallet-actions">
+
+              <button
+                class="bw-edit"
+                onclick="BW_edit(${item.id})">
+
+                ✏️ Edit
+
+              </button>
+
+
+              <button
+                class="bw-delete"
+                onclick="BW_delete(${item.id})">
+
+                🗑️ Hapus
+
+              </button>
+
+            </div>
+
           </div>
 
-          <div class="bank-wallet-type">
-            ${item.type === "Bank"
-              ? "🏦 Bank"
-              : "📱 E-Wallet"}
-          </div>
+        `;
 
-          <div class="bank-wallet-saldo">
-            ${BW_rupiah(item.saldo)}
-          </div>
-
-          <div class="bank-wallet-actions">
-
-            <button
-              class="bw-edit"
-              onclick="BW_edit(${item.id})">
-              ✏️ Edit
-            </button>
-
-            <button
-              class="bw-delete"
-              onclick="BW_delete(${item.id})">
-              🗑️ Hapus
-            </button>
-
-          </div>
-
-        </div>
-      `;
-
-    }).join("");
+      }).join("");
 
   }
+
 
   function BW_escape(text){
 
     return String(text)
+
       .replace(/&/g,"&amp;")
+
       .replace(/</g,"&lt;")
+
       .replace(/>/g,"&gt;")
+
       .replace(/"/g,"&quot;")
+
       .replace(/'/g,"&#039;");
 
   }
 
-  /*
-   * Jalankan setelah halaman selesai dimuat.
-   * Tidak menyentuh login atau Supabase.
-   */
 
-  if(document.readyState === "loading"){
+  if(
+    document.readyState ===
+    "loading"
+  ){
 
     document.addEventListener(
       "DOMContentLoaded",
@@ -1905,6 +2064,7 @@ function kirimNotifikasiAndroid(){
   }
 
 })();
+
 </script>
 </body>
 </html>
